@@ -118,4 +118,9 @@ const TabPanel = forwardRef<HTMLDivElement, TabPanelProps>(
 
 TabPanel.displayName = 'TabPanel'
 
-export { Tabs, TabList, Tab, TabPanel }
+export { Tabs, TabList, Tab, TabPanel, TabsList, TabsTrigger, TabsContent }
+
+const TabsList = TabList
+const TabsTrigger = Tab
+const TabsContent = TabPanel
+

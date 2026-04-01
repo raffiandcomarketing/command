@@ -11,7 +11,7 @@ import {
   Clock,
   Zap as EventIcon,
   GitBranch,
-  Toggle2,
+  ToggleRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -42,7 +42,7 @@ const AutomationCard = ({ automation }: { automation: (typeof mockAutomations)[0
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-semibold text-gray-900">{automation.name}</h3>
-              <Toggle2 className={cn('w-5 h-5 cursor-pointer', automation.active ? 'text-emerald-600' : 'text-gray-400')} />
+              <ToggleRight className={cn('w-5 h-5 cursor-pointer', automation.active ? 'text-emerald-600' : 'text-gray-400')} />
             </div>
             <p className="text-sm text-gray-500">{automation.description}</p>
           </div>

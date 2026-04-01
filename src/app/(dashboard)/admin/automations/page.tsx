@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Toggle2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleRight, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -465,7 +465,7 @@ export default function AutomationsPage() {
                   onClick={() => handleToggleActive(automation)}
                   className="p-2 hover:bg-gray-100 rounded transition-colors"
                 >
-                  <Toggle2
+                  <ToggleRight
                     className={`w-5 h-5 ${
                       automation.isActive
                         ? 'text-emerald-600'
