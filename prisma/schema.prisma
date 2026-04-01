@@ -208,6 +208,7 @@ model User {
   automationRules       AutomationRule[]       @relation("createdBy")
   workflowInstances     WorkflowInstance[]     @relation("triggeredBy")
   recurringSchedules    RecurringSchedule[]    @relation("createdBy")
+  comments              Comment[]
 
   @@index([email])
   @@index([role])
@@ -246,6 +247,7 @@ model Department {
   workflows             Workflow[]
   approvals             Approval[]
   recurringSchedules    RecurringSchedule[]
+  comments              Comment[]
 
   @@index([slug])
   @@index([parentId])
