@@ -205,10 +205,10 @@ model User {
   alerts                Alert[]                @relation("resolvedBy")
   auditLogs             AuditLog[]
   activityLogs          ActivityLog[]
+  comments              Comment[]
   automationRules       AutomationRule[]       @relation("createdBy")
   workflowInstances     WorkflowInstance[]     @relation("triggeredBy")
   recurringSchedules    RecurringSchedule[]    @relation("createdBy")
-  comments              Comment[]
 
   @@index([email])
   @@index([role])
@@ -246,6 +246,7 @@ model Department {
   activityLogs          ActivityLog[]
   workflows             Workflow[]
   approvals             Approval[]
+  recurringSchedules    RecurringSchedule[]
 
   @@index([slug])
   @@index([parentId])
