@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import { Search, Bell } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -8,8 +9,16 @@ import Breadcrumbs from './breadcrumbs';
 import { Dropdown } from '@/components/ui/dropdown';
 
 export default function Header() {
+  const { data: session } = useSession();
   const [searchFocused, setSearchFocused] = useState(false);
   const [notificationCount] = useState(3);
+
+  // Get user initials from session
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    return parts.map(p => p[0]).join('').toUpperCase();
+  };
 
   return (
     <header
@@ -76,11 +85,11 @@ export default function Header() {
             >
               <Avatar className="w-8 h-8">
                 <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-xs font-bold text-[#09203F]">
-                  JD
+                  {getInitials(session?.user?.name)}
                 </div>
               </Avatar>
               <span className="text-sm text-gray-700 hidden sm:inline group-hover:text-gray-900">
-                John
+                {session?.user?.name?.split(' ')[0] || 'User'}
               </span>
             </button>
           }
@@ -108,7 +117,7 @@ export default function Header() {
               href: '#',
               icon: 'LogOut',
               action: () => {
-                window.location.href = '/login';
+                signOut({ callbackUrl: '/login' });
               },
             },
           ]}

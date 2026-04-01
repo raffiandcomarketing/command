@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import { ChevronDown, ChevronLeft, LogOut, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { navigationConfig } from '@/config/navigation';
@@ -18,7 +19,42 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  // Get user initials from session
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    return parts.map(p => p[0]).join('').toUpperCase();
+  };
+
+  // Filter navigation based on user role and departments
+  const isAdmin = session?.user?.role === 'ADMIN';
+  const userDeptSlugs = (session?.user as any)?.departmentSlugs || [];
+
+  const filterNavConfig = (config: typeof navigationConfig) => {
+    return config.filter(section => {
+      // Hide Admin section for non-admin users
+      if (section.href === '/admin' && !isAdmin) {
+        return false;
+      }
+      return true;
+    }).map(section => {
+      // Filter departments for non-admin users
+      if (section.href === '/departments' && section.children && !isAdmin) {
+        return {
+          ...section,
+          children: section.children.filter(dept =>
+            userDeptSlugs.includes(dept.href.split('/')[2])
+          ),
+        };
+      }
+      return section;
+    });
+  };
+
+  const filteredNav = filterNavConfig(navigationConfig);
 
   const toggleExpand = (href: string) => {
     const newExpanded = new Set(expandedItems);
@@ -167,7 +203,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
       {/* Navigation Area */}
       <ScrollArea className="flex-1">
         <nav className="p-4 space-y-2">
-          {navigationConfig.map((section, index) => (
+          {filteredNav.map((section, index) => (
             <div key={`section-${index}`}>
               {section.label && !isCollapsed && (
                 <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
@@ -208,22 +244,29 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 flex-shrink-0">
                 <div className="w-full h-full bg-[#09203F] flex items-center justify-center text-sm font-bold text-white">
-                  JD
+                  {getInitials(session?.user?.name)}
                 </div>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">John Doe</p>
-                <p className="text-xs text-gray-600 truncate">CEO</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{session?.user?.name || 'User'}</p>
+                <p className="text-xs text-gray-600 truncate">{session?.user?.role || 'Member'}</p>
               </div>
             </div>
-            <button className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors">
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors"
+            >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </button>
           </div>
         ) : (
           <div className="flex items-center justify-center">
-            <button className="p-2 rounded hover:bg-gray-100 transition-colors" title="Logout">
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="p-2 rounded hover:bg-gray-100 transition-colors"
+              title="Logout"
+            >
               <LogOut className="w-5 h-5 text-gray-600" />
             </button>
           </div>

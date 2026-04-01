@@ -179,6 +179,12 @@ enum RecurringScheduleType {
   REPORT
 }
 
+enum CrmStage {
+  LEAD
+  OPPORTUNITY
+  SALE
+}
+
 // ==================== CORE IDENTITY MODELS ====================
 
 model User {
@@ -210,6 +216,8 @@ model User {
   automationRules       AutomationRule[]       @relation("createdBy")
   workflowInstances     WorkflowInstance[]     @relation("triggeredBy")
   recurringSchedules    RecurringSchedule[]    @relation("createdBy")
+  crmContacts           CrmContact[]
+  crmDeals              CrmDeal[]              @relation("crmDeals")
 
   @@index([email])
   @@index([role])
@@ -248,6 +256,8 @@ model Department {
   workflows             Workflow[]
   approvals             Approval[]
   recurringSchedules    RecurringSchedule[]
+  crmContacts           CrmContact[]
+  crmDeals              CrmDeal[]
 
   @@index([slug])
   @@index([parentId])
@@ -900,4 +910,54 @@ model RecurringSchedule {
   @@index([isActive])
   @@index([nextRunAt])
   @@map("recurring_schedules")
+}
+
+// ==================== CRM SYSTEM ====================
+
+model CrmContact {
+  id                    String                 @id @default(uuid())
+  name                  String
+  email                 String?
+  phone                 String?
+  company               String?
+  notes                 String?
+  createdById           String
+  departmentId          String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  // Relations
+  createdBy             User                   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  department            Department?            @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  deals                 CrmDeal[]
+
+  @@index([createdById])
+  @@index([departmentId])
+  @@map("crm_contacts")
+}
+
+model CrmDeal {
+  id                    String                 @id @default(uuid())
+  title                 String
+  value                 Float                  @default(0)
+  stage                 CrmStage               @default(LEAD)
+  contactId             String
+  assigneeId            String?
+  departmentId          String?
+  notes                 String?
+  expectedCloseDate     DateTime?
+  closedAt              DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  // Relations
+  contact               CrmContact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  assignee              User?                  @relation("crmDeals", fields: [assigneeId], references: [id], onDelete: SetNull)
+  department            Department?            @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@index([stage])
+  @@index([contactId])
+  @@index([assigneeId])
+  @@index([departmentId])
+  @@map("crm_deals")
 }

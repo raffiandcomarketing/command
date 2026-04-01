@@ -282,6 +282,7 @@ export interface SessionUser {
   avatar?: string;
   role: UserRole;
   isActive: boolean;
+  departmentSlugs?: string[];
 }
 
 export interface UserProfile {

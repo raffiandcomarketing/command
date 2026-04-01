@@ -26,6 +26,37 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // RBAC checks for authenticated users
+  const userRole = token.role as string;
+  const departmentSlugs = (token.departmentSlugs || []) as string[];
+
+  // Allow admin users to access everything
+  if (userRole === 'ADMIN') {
+    return NextResponse.next();
+  }
+
+  // Check department-level access
+  if (pathname.startsWith('/departments/')) {
+    const pathParts = pathname.split('/');
+    const deptSlug = pathParts[2]; // /departments/[slug]
+
+    if (deptSlug && !departmentSlugs.includes(deptSlug)) {
+      const dashboardUrl = new URL('/', request.url);
+      return NextResponse.redirect(dashboardUrl);
+    }
+  }
+
+  // Restrict /admin/* pages to ADMIN users only
+  if (pathname.startsWith('/admin/')) {
+    const dashboardUrl = new URL('/', request.url);
+    return NextResponse.redirect(dashboardUrl);
+  }
+
+  // Allow access to /crm for all authenticated users
+  if (pathname === '/crm') {
+    return NextResponse.next();
+  }
+
   return NextResponse.next();
 }
 

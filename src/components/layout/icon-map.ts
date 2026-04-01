@@ -24,6 +24,7 @@ import {
   Headphones,
   Scale,
   Hammer,
+  Briefcase,
   GitBranch,
   CheckSquare,
   FileCheck,
@@ -40,6 +41,7 @@ import {
   Search,
   Menu,
   X,
+  Diamond,
 } from 'lucide-react';
 
 export const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -63,6 +65,7 @@ export const iconMap: Record<string, React.ComponentType<{ className?: string }>
   Headphones,
   Scale,
   Hammer,
+  Briefcase,
   GitBranch,
   CheckSquare,
   FileCheck,
@@ -79,7 +82,7 @@ export const iconMap: Record<string, React.ComponentType<{ className?: string }>
   Search,
   Menu,
   X,
-  Diamond: require('lucide-react').Diamond,
+  Diamond,
 };
 
 /**

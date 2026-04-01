@@ -15,6 +15,7 @@ declare module 'next-auth/jwt' {
     id: string;
     role: string;
     avatar?: string | null;
+    departmentSlugs: string[];
   }
 }
 
@@ -54,12 +55,21 @@ export const authOptions: NextAuthOptions = {
             data: { lastLoginAt: new Date() },
           });
 
+          // Fetch user's department assignments
+          const userDepts = await db.userDepartment.findMany({
+            where: { userId: user.id },
+            include: { department: true, role: true },
+          });
+
+          const departmentSlugs = userDepts.map(ud => ud.department.slug);
+
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             image: user.avatar,
             role: user.role,
+            departmentSlugs,
           };
         } catch (error) {
           console.error('Auth error:', error);
@@ -77,6 +87,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as any).role;
         token.avatar = (user as any).image;
+        token.departmentSlugs = (user as any).departmentSlugs || [];
       }
       return token;
     },
@@ -86,6 +97,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role;
         (session.user as any).avatar = token.avatar;
         (session.user as any).isActive = true;
+        (session.user as any).departmentSlugs = token.departmentSlugs;
       }
       return session;
     },

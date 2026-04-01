@@ -594,6 +594,11 @@ export const navigationConfig: NavItem[] = [
     badge: 5,
   },
   {
+    label: 'CRM',
+    href: '/crm',
+    icon: 'Briefcase',
+  },
+  {
     label: 'Automations',
     href: '/automations',
     icon: 'Zap',
