@@ -246,8 +246,6 @@ model Department {
   activityLogs          ActivityLog[]
   workflows             Workflow[]
   approvals             Approval[]
-  recurringSchedules    RecurringSchedule[]
-  comments              Comment[]
 
   @@index([slug])
   @@index([parentId])
