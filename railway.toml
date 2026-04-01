@@ -3,7 +3,7 @@ builder = "dockerfile"
 dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "npx prisma db push && npx tsx prisma/seed.ts && npm start"
 healthcheckPath = "/"
 healthcheckTimeout = 30
 
