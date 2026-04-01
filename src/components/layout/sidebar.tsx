@@ -135,7 +135,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
         {!isCollapsed && (
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-8 h-8 flex-shrink-0">
-              <img src="/raffi-logo.svg" alt="Raffi Jewellers" className="w-full h-full object-contain" />
+              <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi Jewellers" className="w-full h-full object-contain" />
             </div>
             <span className="text-xs font-bold text-[#09203F] uppercase tracking-widest whitespace-nowrap">
               Command Centre
@@ -145,7 +145,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
         {isCollapsed && (
           <div className="w-full flex items-center justify-center">
             <div className="w-8 h-8">
-              <img src="/raffi-logo.svg" alt="Raffi Jewellers" className="w-full h-full object-contain" />
+              <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi Jewellers" className="w-full h-full object-contain" />
             </div>
           </div>
         )}

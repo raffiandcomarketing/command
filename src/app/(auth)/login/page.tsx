@@ -53,7 +53,7 @@ export default function LoginPage() {
         }} />
         <div className="relative z-10 px-16 max-w-lg">
           <div className="flex items-center gap-4 mb-12">
-            <img src="/raffi-logo.svg" alt="Raffi" className="h-12 w-12 brightness-0 invert" />
+            <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi" className="h-12 w-12 brightness-0 invert" />
             <div>
               <h1 className="text-white text-xl font-bold tracking-[0.25em]">RAFFI</h1>
               <p className="text-white/40 text-xs tracking-[0.2em] uppercase">Jewellers</p>
@@ -88,7 +88,7 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center bg-white px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center justify-center gap-3 mb-12">
-            <img src="/raffi-logo.svg" alt="Raffi" className="h-8 w-8" />
+            <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi" className="h-8 w-8" />
             <span className="text-[#09203F] font-bold tracking-[0.2em] text-sm">COMMAND CENTRE</span>
           </div>
 
