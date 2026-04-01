@@ -1,24 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { Search, Bell } from 'lucide-react';
+import { Search, Bell, User, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import Breadcrumbs from './breadcrumbs';
-import { Dropdown } from '@/components/ui/dropdown';
 
 export default function Header() {
   const { data: session } = useSession();
   const [searchFocused, setSearchFocused] = useState(false);
   const [notificationCount] = useState(3);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Get user initials from session
   const getInitials = (name?: string) => {
     if (!name) return 'U';
     const parts = name.split(' ');
     return parts.map(p => p[0]).join('').toUpperCase();
   };
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
 
   return (
     <header
@@ -73,56 +86,60 @@ export default function Header() {
           )}
         </button>
 
-        {/* User Avatar Dropdown */}
-        <Dropdown
-          trigger={
-            <button
-              className={cn(
-                'relative flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors',
-                'hover:bg-gray-100 group'
-              )}
-              title="User menu"
-            >
-              <Avatar className="w-8 h-8">
-                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-xs font-bold text-[#09203F]">
-                  {getInitials(session?.user?.name)}
-                </div>
-              </Avatar>
-              <span className="text-sm text-gray-700 hidden sm:inline group-hover:text-gray-900">
-                {session?.user?.name?.split(' ')[0] || 'User'}
-              </span>
-            </button>
-          }
-          items={[
-            {
-              label: 'Profile',
-              href: '#',
-              icon: 'User',
-            },
-            {
-              label: 'Settings',
-              href: '#',
-              icon: 'Settings',
-            },
-            {
-              label: 'Help',
-              href: '#',
-              icon: 'HelpCircle',
-            },
-            {
-              type: 'separator' as const,
-            },
-            {
-              label: 'Logout',
-              href: '#',
-              icon: 'LogOut',
-              action: () => {
-                signOut({ callbackUrl: '/login' });
-              },
-            },
-          ]}
-          align="end"
-        />
+        {/* User Avatar Dropdown - Custom implementation */}
+        <div ref={menuRef} className="relative">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className={cn(
+              'relative flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors',
+              'hover:bg-gray-100 group'
+            )}
+            title="User menu"
+          >
+            <Avatar className="w-8 h-8">
+              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-xs font-bold text-[#09203F]">
+                {getInitials(session?.user?.name)}
+              </div>
+            </Avatar>
+            <span className="text-sm text-gray-700 hidden sm:inline group-hover:text-gray-900">
+              {session?.user?.name?.split(' ')[0] || 'User'}
+            </span>
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-48 rounded-lg bg-white border border-gray-200 shadow-lg z-50 py-1">
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <User className="w-4 h-4" />
+                Profile
+              </button>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Settings
+              </button>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <HelpCircle className="w-4 h-4" />
+                Help
+              </button>
+              <div className="my-1 h-px bg-gray-200" />
+              <button
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
