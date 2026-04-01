@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,14 +22,24 @@ export default function LoginPage() {
     try {
       if (!email || !password) {
         setError('Please enter both email and password');
+        setIsLoading(false);
         return;
       }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
 
-      // Redirect to dashboard on success
-      window.location.href = '/dashboard';
+      if (result?.error) {
+        setError('Invalid email or password. Please try again.');
+        setIsLoading(false);
+        return;
+      }
+
+      router.push('/');
+      router.refresh();
     } catch (err) {
       setError('Authentication failed. Please try again.');
     } finally {
@@ -40,7 +52,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <Card className="bg-white border border-gray-200 shadow-lg">
           <div className="flex flex-col items-center mb-8">
-            <Image
+            <img
               src="/raffi-logo.svg"
               alt="Raffi Logo"
               width={40}
@@ -69,10 +81,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <Input
