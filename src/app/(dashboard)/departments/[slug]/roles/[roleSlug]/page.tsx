@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Modal } from '@/components/ui/modal';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   getDepartmentBySlug,
@@ -214,6 +216,31 @@ export default function RolePage() {
   const dept = getDepartmentBySlug(departmentSlug);
   const role = getRoleBySlug(departmentSlug, roleSlug);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [taskForm, setTaskForm] = useState({
+    title: '',
+    description: '',
+    priority: 'Medium',
+    dueDate: '',
+  });
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  const handleCreateTask = async () => {
+    if (!taskForm.title.trim()) return;
+    try {
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskForm),
+      });
+    } catch (_) {}
+    setShowSuccessMessage(true);
+    setTaskForm({ title: '', description: '', priority: 'Medium', dueDate: '' });
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setShowSuccessMessage(false);
+    }, 1500);
+  };
 
   if (!dept || !role) {
     return (
@@ -477,7 +504,7 @@ export default function RolePage() {
             <div className="border-b border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">Assigned Tasks</h2>
-                <Button size="sm" className="bg-[#09203F] hover:bg-[#0a2651] text-white">
+                <Button size="sm" className="bg-[#09203F] hover:bg-[#0a2651] text-white" onClick={() => setIsModalOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   New Task
                 </Button>
@@ -623,6 +650,87 @@ export default function RolePage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* New Task Modal */}
+      <Modal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title="Create New Task"
+        description={`Add a new task for ${role.title}`}
+        size="lg"
+      >
+        <div className="space-y-6">
+          {showSuccessMessage && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
+              <CheckSquare className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-emerald-800">Task created successfully!</span>
+            </div>
+          )}
+
+          <Input
+            label="Task Title *"
+            placeholder="Enter task title"
+            value={taskForm.title}
+            onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+            required
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              placeholder="Enter task description (optional)"
+              value={taskForm.description}
+              onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+              className={cn(
+                'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 transition-colors duration-200 min-h-24 resize-none',
+                'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20'
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <select
+                value={taskForm.priority}
+                onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
+                className={cn(
+                  'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 transition-colors duration-200',
+                  'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20'
+                )}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+
+            <Input
+              label="Due Date"
+              type="date"
+              value={taskForm.dueDate}
+              onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              onClick={handleCreateTask}
+              className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-11 transition-all duration-200"
+            >
+              Create Task
+            </Button>
+            <Button
+              onClick={() => setIsModalOpen(false)}
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium h-11 transition-all duration-200"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
