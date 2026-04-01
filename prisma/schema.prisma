@@ -864,7 +864,6 @@ model Comment {
 
   // Relations
   author                User                   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  task                  Task?                  @relation(fields: [entityId], references: [id], onDelete: Cascade, ignore: "relationFromFields")
   parentComment         Comment?               @relation("CommentThreads", fields: [parentId], references: [id], onDelete: Cascade)
   replies               Comment[]              @relation("CommentThreads")
 
