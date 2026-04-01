@@ -1,0 +1,16 @@
+[build]
+builder = "dockerfile"
+dockerfile = "Dockerfile"
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/"
+healthcheckTimeout = 30
+
+[[services]]
+name = "command-centre"
+protocol = "http"
+port = 3000
+
+[env]
+NODE_ENV = "production"

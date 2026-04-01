@@ -1,0 +1,11 @@
+<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- RAFFI -->
+  <text x="10" y="45" font-family="Georgia, serif" font-size="42" font-weight="bold" fill="#09203F" letter-spacing="-2">
+    RAFFI
+  </text>
+
+  <!-- JEWELLERS -->
+  <text x="10" y="68" font-family="Georgia, serif" font-size="12" font-weight="300" fill="#09203F" letter-spacing="3" word-spacing="8">
+    JEWELLERS
+  </text>
+</svg>

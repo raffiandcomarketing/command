@@ -1,0 +1,290 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+  :root {
+    /* Light Theme Colors */
+    --background: white;
+    --foreground: #111827;
+    --card: white;
+    --card-border: #E5E7EB;
+    --muted: #F9FAFB;
+    --muted-foreground: #6B7280;
+    --accent: #09203F;
+    --accent-foreground: white;
+    --sidebar-bg: white;
+    --sidebar-border: #E5E7EB;
+
+    /* Brand Navy */
+    --color-brand: #09203F;
+    --color-brand-light: #7693C2;
+
+    /* Department Colors (Soft Pastel) */
+    --color-sales: #B3D9FF;
+    --color-sales-dark: #3b82f6;
+    --color-operations: #B3F1D1;
+    --color-operations-dark: #10b981;
+    --color-finance: #FFE4B3;
+    --color-finance-dark: #f59e0b;
+    --color-hr: #F4D4E8;
+    --color-hr-dark: #ec4899;
+    --color-tech: #DFD4FF;
+    --color-tech-dark: #8b5cf6;
+
+    /* Sizing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-white text-gray-900 antialiased transition-colors duration-300;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+      'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  }
+
+  /* Selection Styling */
+  ::selection {
+    @apply bg-brand-100 text-gray-900;
+  }
+
+  ::-moz-selection {
+    @apply bg-brand-100 text-gray-900;
+  }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded hover:bg-gray-400;
+  }
+}
+
+@layer components {
+  /* Primary Button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#09203F] text-white hover:bg-[#0d2a4f] shadow-luxury hover:shadow-luxury-lg;
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-900 hover:bg-gray-200;
+  }
+
+  /* Outline Button */
+  .btn-outline {
+    @apply inline-flex items-center justify-center px-6 py-3 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 text-gray-700 hover:bg-gray-50;
+  }
+
+  /* Luxury Button (Legacy) */
+  .btn-luxury {
+    @apply inline-flex items-center justify-center px-6 py-3 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-luxury-primary {
+    @apply btn-luxury bg-[#09203F] text-white hover:bg-[#0d2a4f] shadow-luxury hover:shadow-luxury-lg;
+  }
+
+  .btn-luxury-secondary {
+    @apply btn-luxury bg-gray-100 text-gray-900 hover:bg-gray-200;
+  }
+
+  .btn-luxury-ghost {
+    @apply btn-luxury border border-brand-200 text-brand-800 hover:bg-brand-50;
+  }
+
+  /* Card Styling */
+  .card {
+    @apply bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:border-brand-300;
+  }
+
+  /* Input Styling */
+  .input-field {
+    @apply w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200;
+  }
+
+  .input-field:disabled {
+    @apply bg-gray-50 cursor-not-allowed opacity-50;
+  }
+
+  /* Badge Styling */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-navy {
+    @apply badge bg-brand-50 text-brand-800;
+  }
+
+  .badge-success {
+    @apply badge bg-green-50 text-green-700;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-50 text-amber-700;
+  }
+
+  .badge-error {
+    @apply badge bg-red-50 text-red-700;
+  }
+
+  .badge-info {
+    @apply badge bg-blue-50 text-blue-700;
+  }
+
+  /* Section Header */
+  .section-header {
+    @apply mb-6 border-b border-gray-200 pb-4;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  .section-subtitle {
+    @apply text-sm text-gray-500 mt-1;
+  }
+
+  /* Grid Responsive */
+  .grid-responsive {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+
+  /* Fade In Animation */
+  .fade-in {
+    @apply animate-fade-in;
+  }
+
+  /* Glass Morphism Effect */
+  .glass {
+    @apply backdrop-blur-xl bg-white/80 border border-gray-200/50;
+  }
+
+  /* Luxury Divider */
+  .divider-luxury {
+    @apply border-t border-gray-200;
+  }
+
+  /* Loading Skeleton */
+  .skeleton {
+    @apply bg-gray-200 animate-pulse rounded;
+  }
+
+  /* Focus Ring */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+  }
+
+  /* Status Indicator */
+  .status-indicator {
+    @apply inline-flex items-center gap-2 text-sm font-medium;
+  }
+
+  .status-active {
+    @apply text-green-700;
+  }
+
+  .status-active::before {
+    @apply content-[''] w-2 h-2 rounded-full bg-green-600;
+  }
+
+  .status-inactive {
+    @apply text-gray-500;
+  }
+
+  .status-inactive::before {
+    @apply content-[''] w-2 h-2 rounded-full bg-gray-400;
+  }
+}
+
+@layer utilities {
+  /* Flexbox Utilities */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  .flex-col-center {
+    @apply flex flex-col items-center justify-center;
+  }
+
+  /* Position Utilities */
+  .absolute-center {
+    @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+  }
+
+  /* Text Utilities */
+  .text-truncate {
+    @apply overflow-hidden text-overflow ellipsis whitespace-nowrap;
+  }
+
+  .text-clamp-2 {
+    @apply overflow-hidden display-webkit-box -webkit-line-clamp-2 -webkit-box-orient-vertical;
+  }
+
+  .text-clamp-3 {
+    @apply overflow-hidden display-webkit-box -webkit-line-clamp-3 -webkit-box-orient-vertical;
+  }
+
+  /* Gradient Text */
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-600 to-brand-800 bg-clip-text text-transparent;
+  }
+
+  /* Backdrop Blur */
+  .backdrop-blur-sm {
+    @apply backdrop-blur;
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    @apply bg-white text-black;
+  }
+
+  .no-print {
+    @apply hidden;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    @apply !animate-none !transition-none;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: more) {
+  :root {
+    --color-brand: #051628;
+  }
+
+  body {
+    @apply border-2 border-current;
+  }
+}
