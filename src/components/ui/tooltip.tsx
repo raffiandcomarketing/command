@@ -3,7 +3,7 @@
 import React, { forwardRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
-interface TooltipProps extends React.HTMLAttributes<HTMLDivElement> {
+interface TooltipProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'content'> {
   content: React.ReactNode
   side?: 'top' | 'right' | 'bottom' | 'left'
   delayMs?: number

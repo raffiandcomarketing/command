@@ -212,7 +212,7 @@ export async function retryWebhook(
     data: {
       webhookId,
       event: lastLog.event,
-      payload: lastLog.payload,
+      payload: lastLog.payload ?? {},
       response: result.success ? { message: 'Retry successful' } : { error: result.error },
       statusCode: result.statusCode,
       success: result.success,

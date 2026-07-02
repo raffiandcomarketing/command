@@ -1,131 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
+import { handle, parseBody, getPagination } from '@/lib/api/http';
+import { requireAdmin, getClientIp } from '@/lib/api/guard';
+import { writeAudit } from '@/lib/api/audit';
+import { createUserSchema, UserRoleEnum } from '@/lib/validate';
+import { assertStrongPassword, hashPassword } from '@/lib/security/password';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+const userSelect = {
+  id: true,
+  email: true,
+  name: true,
+  avatar: true,
+  role: true,
+  isActive: true,
+  lastLoginAt: true,
+  createdAt: true,
+  userDepartments: {
+    include: {
+      department: { select: { id: true, name: true, slug: true } },
+      role: { select: { id: true, title: true, slug: true } },
+    },
+  },
+} satisfies Prisma.UserSelect;
 
-    const searchParams = request.nextUrl.searchParams;
-    const search = searchParams.get('search');
-    const departmentId = searchParams.get('departmentId');
-    const role = searchParams.get('role');
+export const GET = handle(async (req: NextRequest) => {
+  await requireAdmin();
 
-    try {
-      const users = await db.user.findMany({
-        where: {
-          ...(search && {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
-            ],
-          }),
-          ...(departmentId && { members: { some: { departmentId } } }),
-          ...(role && { role }),
+  const sp = req.nextUrl.searchParams;
+  const search = sp.get('search')?.trim() || undefined;
+  const departmentId = sp.get('departmentId') || undefined;
+  const roleParam = UserRoleEnum.safeParse(sp.get('role')?.toUpperCase());
+  const p = getPagination(req, 50);
+
+  // Fixed (assessment R4/TD3): the old query used a non-existent
+  // `members` relation; the schema relation is `userDepartments`.
+  const where: Prisma.UserWhereInput = {
+    ...(search && {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+    ...(departmentId && { userDepartments: { some: { departmentId } } }),
+    ...(roleParam.success && { role: roleParam.data }),
+  };
+
+  const [users, total] = await Promise.all([
+    db.user.findMany({
+      where,
+      select: userSelect,
+      orderBy: { name: 'asc' },
+      skip: p.skip,
+      take: p.take,
+    }),
+    db.user.count({ where }),
+  ]);
+
+  return NextResponse.json({
+    users,
+    pagination: { total, page: p.page, pageSize: p.pageSize, pages: Math.max(1, Math.ceil(total / p.pageSize)) },
+  });
+});
+
+export const POST = handle(async (req: NextRequest) => {
+  const admin = await requireAdmin();
+
+  const data = await parseBody(req, createUserSchema);
+  assertStrongPassword(data.password);
+
+  const passwordHash = await hashPassword(data.password);
+
+  const user = await db.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      passwordHash,
+      role: data.role ?? 'MEMBER',
+      isActive: data.isActive ?? true,
+      avatar: data.avatar ?? null,
+      ...(data.departments?.length && {
+        userDepartments: {
+          create: data.departments.map((d) => ({
+            departmentId: d.departmentId,
+            roleId: d.roleId,
+            isPrimary: d.isPrimary ?? false,
+          })),
         },
-        include: {
-          members: { include: { department: { select: { id: true, name: true } } } },
-        },
-        orderBy: { name: 'asc' },
-      });
+      }),
+    },
+    select: userSelect,
+  });
 
-      return NextResponse.json({
-        users: users.map((u) => ({
-          ...u,
-          password: undefined,
-        })),
-      });
-    } catch {
-      // Fallback mock data
-      return NextResponse.json({
-        users: [
-          {
-            id: '1',
-            name: 'Admin User',
-            email: 'admin@example.com',
-            role: 'ADMIN',
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/users error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  void writeAudit({
+    userId: admin.id,
+    action: 'create',
+    entity: 'User',
+    entityId: user.id,
+    changes: { email: user.email, role: user.role },
+    ipAddress: getClientIp(req),
+  });
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
-
-    const body = await request.json();
-    const { name, email, password, role, departmentIds } = body;
-
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, email, password' },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const user = await db.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          role: role || 'USER',
-          ...(departmentIds && departmentIds.length > 0 && {
-            members: {
-              createMany: {
-                data: departmentIds.map((deptId: string) => ({
-                  departmentId: deptId,
-                })),
-              },
-            },
-          }),
-        },
-        include: {
-          members: { include: { department: { select: { id: true, name: true } } } },
-        },
-      });
-
-      const { password: _, ...userData } = user;
-      return NextResponse.json({ user: userData }, { status: 201 });
-    } catch {
-      // Fallback mock response
-      const mockUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        email,
-        role: role || 'USER',
-      };
-      return NextResponse.json({ user: mockUser }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/users error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ user }, { status: 201 });
+});

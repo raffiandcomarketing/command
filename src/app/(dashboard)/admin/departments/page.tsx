@@ -33,10 +33,8 @@ export default function DepartmentsPage() {
       setDepartments(data.departments || []);
     } catch (error) {
       console.error('Failed to fetch departments:', error);
-      setDepartments([
-        { id: '1', name: 'Sales', description: 'Sales operations', isActive: true, roleCount: 3, memberCount: 12, },
-        { id: '2', name: 'Operations', description: 'Operations team', isActive: true, roleCount: 2, memberCount: 8, },
-      ]);
+      setDepartments([]);
+      window.alert('Could not load departments: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -57,6 +55,9 @@ export default function DepartmentsPage() {
         setEditingId(null);
         setShowForm(false);
         fetchDepartments();
+      } else {
+        const body = await response.json().catch(() => ({}));
+        window.alert(body.error || 'Failed to save department');
       }
     } catch (error) {
       console.error('Failed to save department:', error);

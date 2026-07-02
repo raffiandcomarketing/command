@@ -1,142 +1,76 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireSession, requireRole, getClientIp } from '@/lib/api/guard';
+import { notFound } from '@/lib/api/errors';
+import { writeAudit } from '@/lib/api/audit';
+import { updateAutomationSchema } from '@/lib/validate';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const GET = handle(async (_req: NextRequest, { params }) => {
+  await requireSession();
+  const automation = await db.automationRule.findUnique({
+    where: { id: params.id },
+    include: {
+      department: { select: { id: true, name: true, slug: true } },
+      createdBy: { select: { id: true, name: true } },
+      automationExecutions: { orderBy: { startedAt: 'desc' }, take: 20 },
+    },
+  });
+  if (!automation) throw notFound('Automation not found');
+  return NextResponse.json({ automation });
+});
 
-    try {
-      const automation = await db.automation.findUnique({
-        where: { id: params.id },
-        include: {
-          department: { select: { id: true, name: true } },
-        },
-      });
+export const PATCH = handle(async (req: NextRequest, { params }) => {
+  const user = await requireSession();
+  requireRole(user, 'ADMIN', 'EXECUTIVE', 'MANAGER');
 
-      if (!automation) {
-        return NextResponse.json(
-          { error: 'Automation not found' },
-          { status: 404 }
-        );
-      }
+  const data = await parseBody(req, updateAutomationSchema);
 
-      return NextResponse.json({ automation });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        automation: {
-          id: params.id,
-          name: 'Sample Automation',
-          description: 'Sample automation rule',
-          isActive: true,
-          trigger: { type: 'EVENT' },
-          conditions: [],
-          actions: [],
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`GET /api/automations/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const automation = await db.automationRule.update({
+    where: { id: params.id },
+    data: {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.departmentId !== undefined && { departmentId: data.departmentId }),
+      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      ...(data.triggerType !== undefined && { triggerType: data.triggerType }),
+      ...(data.triggerConfig !== undefined && { triggerConfig: data.triggerConfig as object }),
+      ...(data.conditions !== undefined && { conditions: (data.conditions as object) ?? undefined }),
+      ...(data.actions !== undefined && { actions: data.actions as object[] }),
+      ...(data.cooldownMinutes !== undefined && { cooldownMinutes: data.cooldownMinutes }),
+    },
+    include: { department: { select: { id: true, name: true, slug: true } } },
+  });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  void writeAudit({
+    userId: user.id,
+    action: 'update',
+    entity: 'AutomationRule',
+    entityId: automation.id,
+    changes: data,
+    ipAddress: getClientIp(req),
+  });
 
-    const body = await request.json();
-    const { name, description, isActive, trigger, conditions, actions } = body;
+  return NextResponse.json({ automation });
+});
 
-    try {
-      const automation = await db.automation.update({
-        where: { id: params.id },
-        data: {
-          ...(name && { name }),
-          ...(description !== undefined && { description }),
-          ...(isActive !== undefined && { isActive }),
-          ...(trigger && { trigger }),
-          ...(conditions && { conditions }),
-          ...(actions && { actions }),
-        },
-        include: {
-          department: { select: { id: true, name: true } },
-        },
-      });
+export const DELETE = handle(async (req: NextRequest, { params }) => {
+  const user = await requireSession();
+  requireRole(user, 'ADMIN', 'EXECUTIVE');
 
-      return NextResponse.json({ automation });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        automation: {
-          id: params.id,
-          name: name || 'Sample Automation',
-          description: description || '',
-          isActive: isActive !== false,
-          trigger: trigger || { type: 'EVENT' },
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`PATCH /api/automations/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const rule = await db.automationRule.findUnique({ where: { id: params.id } });
+  if (!rule) throw notFound('Automation not found');
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  await db.automationRule.delete({ where: { id: params.id } });
 
-    try {
-      await db.automation.delete({
-        where: { id: params.id },
-      });
+  void writeAudit({
+    userId: user.id,
+    action: 'delete',
+    entity: 'AutomationRule',
+    entityId: params.id,
+    changes: { name: rule.name },
+    ipAddress: getClientIp(req),
+  });
 
-      return NextResponse.json({ success: true }, { status: 204 });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({ success: true }, { status: 204 });
-    }
-  } catch (error) {
-    console.error(`DELETE /api/automations/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ success: true });
+});

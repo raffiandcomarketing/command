@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = { eslint: { ignoreDuringBuilds: true }, typescript: { ignoreBuildErrors: true },
+const nextConfig = {
+  // TypeScript and ESLint checks are ENFORCED at build time
+  // (assessment R9/TD6 - the previous config ignored both, which let
+  // real model-name bugs ship to production undetected).
   reactStrictMode: true,
   swcMinify: true,
   compiler: {
@@ -18,22 +21,10 @@ const nextConfig = { eslint: { ignoreDuringBuilds: true }, typescript: { ignoreB
       {
         source: '/:path*',
         headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         ],
       },
     ];

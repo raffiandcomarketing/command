@@ -1,159 +1,112 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody, getPagination } from '@/lib/api/http';
+import { requireSession, assertCanWrite, getClientIp } from '@/lib/api/guard';
+import { writeAudit, logActivity } from '@/lib/api/audit';
+import { createDealSchema, CrmStageEnum } from '@/lib/validate';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+const dealInclude = {
+  contact: true,
+  assignee: { select: { id: true, name: true, email: true, avatar: true } },
+  department: { select: { id: true, name: true, slug: true } },
+} satisfies Prisma.CrmDealInclude;
 
-    try {
-      const deals = await db.deal.findMany({
-        include: {
-          contact: true,
-          assignee: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+export const GET = handle(async (req: NextRequest) => {
+  await requireSession();
 
-      return NextResponse.json({ deals });
-    } catch (dbError) {
-      // Fallback mock data
-      return NextResponse.json({
-        deals: [
-          {
-            id: '1',
-            title: 'Diamond Engagement Ring',
-            contactName: 'Sarah Chen',
-            value: 12500,
-            stage: 'lead',
-            expectedCloseDate: '2026-04-30',
-            assignee: { id: '1', name: 'Alex Johnson', avatar: 'AJ' },
+  const sp = req.nextUrl.searchParams;
+  const stageParam = CrmStageEnum.safeParse(sp.get('stage')?.toUpperCase());
+  const assigneeId = sp.get('assigneeId') || undefined;
+  const search = sp.get('search')?.trim() || undefined;
+  const p = getPagination(req, 100);
+
+  const where: Prisma.CrmDealWhereInput = {
+    ...(stageParam.success && { stage: stageParam.data }),
+    ...(assigneeId && { assigneeId }),
+    ...(search && {
+      OR: [
+        { title: { contains: search, mode: 'insensitive' } },
+        { contact: { name: { contains: search, mode: 'insensitive' } } },
+      ],
+    }),
+  };
+
+  // Fixed (assessment R4/TD2): this endpoint previously queried `db.deal`,
+  // which does not exist (model is CrmDeal), so it always returned mock data.
+  const [deals, total] = await Promise.all([
+    db.crmDeal.findMany({
+      where,
+      include: dealInclude,
+      orderBy: { createdAt: 'desc' },
+      skip: p.skip,
+      take: p.take,
+    }),
+    db.crmDeal.count({ where }),
+  ]);
+
+  return NextResponse.json({
+    deals,
+    pagination: { total, page: p.page, pageSize: p.pageSize, pages: Math.max(1, Math.ceil(total / p.pageSize)) },
+  });
+});
+
+export const POST = handle(async (req: NextRequest) => {
+  const user = await requireSession();
+  assertCanWrite(user);
+
+  const data = await parseBody(req, createDealSchema);
+
+  // Resolve the contact: connect an existing one or create inline by name.
+  let contactId = data.contactId;
+  if (!contactId && data.contactName) {
+    const existing = await db.crmContact.findFirst({
+      where: { name: { equals: data.contactName, mode: 'insensitive' } },
+    });
+    contactId =
+      existing?.id ??
+      (
+        await db.crmContact.create({
+          data: {
+            name: data.contactName,
+            createdById: user.id,
+            departmentId: data.departmentId ?? null,
           },
-          {
-            id: '2',
-            title: 'Estate Jewellery Purchase',
-            contactName: 'Robert Williams',
-            value: 28000,
-            stage: 'opportunity',
-            expectedCloseDate: '2026-05-05',
-            assignee: { id: '2', name: 'Emma Wilson', avatar: 'EW' },
-          },
-          {
-            id: '3',
-            title: 'Platinum Wedding Bands',
-            contactName: 'James Morrison',
-            value: 9200,
-            stage: 'sale',
-            expectedCloseDate: '2026-03-25',
-            assignee: { id: '1', name: 'Alex Johnson', avatar: 'AJ' },
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/crm/deals error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+        })
+      ).id;
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  const deal = await db.crmDeal.create({
+    data: {
+      title: data.title,
+      value: data.value ?? 0,
+      stage: data.stage ?? 'LEAD',
+      contactId: contactId!,
+      assigneeId: data.assigneeId ?? user.id,
+      departmentId: data.departmentId ?? null,
+      notes: data.notes ?? null,
+      expectedCloseDate: data.expectedCloseDate ?? null,
+      ...(data.stage === 'SALE' && { closedAt: new Date() }),
+    },
+    include: dealInclude,
+  });
 
-    const body = await request.json();
-    const {
-      title,
-      value,
-      stage,
-      contactId,
-      assigneeId,
-      departmentId,
-      notes,
-      expectedCloseDate,
-    } = body;
+  void writeAudit({
+    userId: user.id,
+    action: 'create',
+    entity: 'CrmDeal',
+    entityId: deal.id,
+    changes: { title: deal.title, value: deal.value, stage: deal.stage },
+    ipAddress: getClientIp(req),
+  });
+  void logActivity({
+    userId: user.id,
+    type: 'crm.deal.created',
+    description: `added deal "${deal.title}" (${deal.stage.toLowerCase()})`,
+    entityType: 'CrmDeal',
+    entityId: deal.id,
+    departmentId: deal.departmentId,
+  });
 
-    if (!title || typeof title !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid deal title' },
-        { status: 400 }
-      );
-    }
-
-    if (!stage || !['lead', 'opportunity', 'sale'].includes(stage)) {
-      return NextResponse.json(
-        { error: 'Invalid stage' },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const deal = await db.deal.create({
-        data: {
-          title,
-          value: parseFloat(value) || 0,
-          stage,
-          contactId: contactId || null,
-          assigneeId: assigneeId || null,
-          departmentId: departmentId || null,
-          notes: notes || '',
-          expectedCloseDate: expectedCloseDate ? new Date(expectedCloseDate) : null,
-        },
-        include: {
-          contact: true,
-          assignee: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-        },
-      });
-
-      return NextResponse.json({ deal }, { status: 201 });
-    } catch (dbError) {
-      // Fallback mock response
-      const mockDeal = {
-        id: Math.random().toString(36).substr(2, 9),
-        title,
-        value: parseFloat(value) || 0,
-        stage,
-        contactId: contactId || null,
-        assigneeId: assigneeId || null,
-        departmentId: departmentId || null,
-        notes: notes || '',
-        expectedCloseDate: expectedCloseDate ? new Date(expectedCloseDate) : null,
-        createdAt: new Date(),
-      };
-      return NextResponse.json({ deal: mockDeal }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/crm/deals error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ deal }, { status: 201 });
+});

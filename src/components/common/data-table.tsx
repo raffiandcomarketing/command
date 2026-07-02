@@ -66,7 +66,7 @@ const DataTable = forwardRef<HTMLDivElement, DataTableProps<any>>(
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialSortOrder)
 
     const sortedData = useMemo(() => {
-      let sorted = [...data]
+      const sorted = [...data]
 
       if (sortBy) {
         sorted.sort((a, b) => {

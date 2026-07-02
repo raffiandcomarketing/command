@@ -1,118 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody, getPagination } from '@/lib/api/http';
+import { requireSession, assertCanWrite, getClientIp } from '@/lib/api/guard';
+import { writeAudit } from '@/lib/api/audit';
+import { createContactSchema } from '@/lib/validate';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const GET = handle(async (req: NextRequest) => {
+  await requireSession();
 
-    const searchParams = request.nextUrl.searchParams;
-    const search = searchParams.get('search');
+  const sp = req.nextUrl.searchParams;
+  const search = sp.get('search')?.trim() || undefined;
+  const p = getPagination(req, 50);
 
-    try {
-      const contacts = await db.contact.findMany({
-        where: {
-          ...(search && {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
-              { phone: { contains: search, mode: 'insensitive' } },
-            ],
-          }),
-        },
-        orderBy: { name: 'asc' },
-      });
+  const where: Prisma.CrmContactWhereInput = {
+    ...(search && {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
+        { company: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+  };
 
-      return NextResponse.json({ contacts });
-    } catch (dbError) {
-      // Fallback mock data
-      return NextResponse.json({
-        contacts: [
-          {
-            id: '1',
-            name: 'Sarah Chen',
-            email: 'sarah.chen@email.com',
-            phone: '+1-555-0101',
-            company: 'Chen Enterprises',
-            createdAt: new Date(),
-          },
-          {
-            id: '2',
-            name: 'Robert Williams',
-            email: 'robert.williams@email.com',
-            phone: '+1-555-0102',
-            company: 'Williams & Co',
-            createdAt: new Date(),
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/crm/contacts error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const [contacts, total] = await Promise.all([
+    db.crmContact.findMany({
+      where,
+      include: { _count: { select: { deals: true } } },
+      orderBy: { name: 'asc' },
+      skip: p.skip,
+      take: p.take,
+    }),
+    db.crmContact.count({ where }),
+  ]);
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  return NextResponse.json({
+    contacts,
+    pagination: { total, page: p.page, pageSize: p.pageSize, pages: Math.max(1, Math.ceil(total / p.pageSize)) },
+  });
+});
 
-    const body = await request.json();
-    const { name, email, phone, company, notes } = body;
+export const POST = handle(async (req: NextRequest) => {
+  const user = await requireSession();
+  assertCanWrite(user);
 
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid contact name' },
-        { status: 400 }
-      );
-    }
+  const data = await parseBody(req, createContactSchema);
 
-    try {
-      const contact = await db.contact.create({
-        data: {
-          name,
-          email: email || '',
-          phone: phone || '',
-          company: company || '',
-          notes: notes || '',
-        },
-      });
+  const contact = await db.crmContact.create({
+    data: {
+      name: data.name,
+      email: data.email ?? null,
+      phone: data.phone ?? null,
+      company: data.company ?? null,
+      notes: data.notes ?? null,
+      departmentId: data.departmentId ?? null,
+      createdById: user.id,
+    },
+  });
 
-      return NextResponse.json({ contact }, { status: 201 });
-    } catch (dbError) {
-      // Fallback mock response
-      const mockContact = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        email: email || '',
-        phone: phone || '',
-        company: company || '',
-        notes: notes || '',
-        createdAt: new Date(),
-      };
-      return NextResponse.json({ contact: mockContact }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/crm/contacts error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  void writeAudit({
+    userId: user.id,
+    action: 'create',
+    entity: 'CrmContact',
+    entityId: contact.id,
+    changes: { name: contact.name },
+    ipAddress: getClientIp(req),
+  });
+
+  return NextResponse.json({ contact }, { status: 201 });
+});

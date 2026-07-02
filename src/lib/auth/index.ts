@@ -1,8 +1,11 @@
 import { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import bcryptjs from 'bcryptjs';
 import { db } from '@/lib/db';
-import { UserRole, SessionUser } from '@/types';
+import { SessionUser } from '@/types';
+import { verifyPassword } from '@/lib/security/password';
+import { rateLimit, resetRateLimit } from '@/lib/api/rate-limit';
+import { writeAudit } from '@/lib/api/audit';
+import { log } from '@/lib/log';
 
 declare module 'next-auth' {
   interface Session {
@@ -19,6 +22,10 @@ declare module 'next-auth/jwt' {
   }
 }
 
+/** 5 failed attempts per identity+IP per 15 minutes (assessment R8). */
+const LOGIN_ATTEMPT_LIMIT = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -27,41 +34,54 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
+        const email = credentials.email.trim().toLowerCase();
+        const xff = (req?.headers?.['x-forwarded-for'] as string) || '';
+        const ip = xff.split(',')[0]?.trim() || 'unknown';
+        const rlKey = `login:${ip}:${email}`;
+
+        const rl = rateLimit(rlKey, LOGIN_ATTEMPT_LIMIT, LOGIN_WINDOW_MS);
+        if (!rl.allowed) {
+          log.warn('Login rate limit exceeded', { email, ip });
+          // NextAuth surfaces this as a failed sign-in without user enumeration.
+          return null;
+        }
+
         try {
-          const user = await db.user.findUnique({
-            where: { email: credentials.email },
-          });
+          const user = await db.user.findUnique({ where: { email } });
 
           if (!user || !user.isActive) {
             return null;
           }
 
-          const passwordMatch = await bcryptjs.compare(
-            credentials.password,
-            user.passwordHash
-          );
-
+          const passwordMatch = await verifyPassword(credentials.password, user.passwordHash);
           if (!passwordMatch) {
             return null;
           }
+
+          resetRateLimit(rlKey);
 
           await db.user.update({
             where: { id: user.id },
             data: { lastLoginAt: new Date() },
           });
 
-          // Fetch user's department assignments
           const userDepts = await db.userDepartment.findMany({
             where: { userId: user.id },
-            include: { department: true, role: true },
+            include: { department: { select: { slug: true } } },
           });
 
-          const departmentSlugs = userDepts.map(ud => ud.department.slug);
+          void writeAudit({
+            userId: user.id,
+            action: 'login',
+            entity: 'User',
+            entityId: user.id,
+            ipAddress: ip,
+          });
 
           return {
             id: user.id,
@@ -69,10 +89,10 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             image: user.avatar,
             role: user.role,
-            departmentSlugs,
+            departmentSlugs: userDepts.map((ud) => ud.department.slug),
           };
         } catch (error) {
-          console.error('Auth error:', error);
+          log.error('Auth error', { err: error as Error });
           return null;
         }
       },
@@ -85,26 +105,28 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
-        token.avatar = (user as any).image;
-        token.departmentSlugs = (user as any).departmentSlugs || [];
+        token.role = (user as unknown as { role: string }).role;
+        token.avatar = (user as unknown as { image?: string | null }).image;
+        token.departmentSlugs =
+          (user as unknown as { departmentSlugs?: string[] }).departmentSlugs || [];
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-        (session.user as any).avatar = token.avatar;
-        (session.user as any).isActive = true;
-        (session.user as any).departmentSlugs = token.departmentSlugs;
+        session.user.id = token.id;
+        session.user.role = token.role as SessionUser['role'];
+        session.user.avatar = token.avatar;
+        session.user.isActive = true;
+        session.user.departmentSlugs = token.departmentSlugs;
       }
       return session;
     },
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60,
+    // Hardened from 30 days to 12 hours (assessment R8/TD15).
+    maxAge: 12 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

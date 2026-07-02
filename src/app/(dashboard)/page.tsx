@@ -1,229 +1,144 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/toast';
+import { api } from '@/lib/client/api';
+import { formatRelativeTime } from '@/lib/utils';
 import {
   CheckSquare,
   GitBranch,
   FileCheck,
   Users,
   TrendingUp,
-  Clock,
-  AlertCircle,
   Plus,
   ChevronRight,
   Diamond,
+  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+interface DashboardData {
+  stats: {
+    openTasks: number;
+    pendingApprovals: number;
+    activeUsers: number;
+    activeWorkflows: number;
+    pipelineValue: number;
+    salesValue30d: number;
+  };
+  recentDeals: Array<{
+    id: string;
+    title: string;
+    value: number;
+    stage: string;
+    contact: { name: string } | null;
+  }>;
+  departments: Array<{ id: string; name: string; slug: string; members: number; openTasks: number }>;
+}
+
+interface Activity {
+  id: string;
+  type: string;
+  description: string;
+  createdAt: string;
+  user: { id: string; name: string; avatar: string | null };
+}
+
+const STAGE_LABELS: Record<string, string> = {
+  LEAD: 'Lead',
+  OPPORTUNITY: 'Opportunity',
+  SALE: 'Closed sale',
+};
+
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const toast = useToast();
+
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [activities, setActivities] = useState<Activity[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [taskForm, setTaskForm] = useState({
-    title: '',
-    description: '',
-    priority: 'Medium',
-    dueDate: '',
-  });
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', priority: 'MEDIUM', dueDate: '' });
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // Determine user's role and department
-  const userRole = session?.user?.role || 'user';
-  const userDepartment = session?.user?.department || 'Operations';
+  const userRole = session?.user?.role;
   const userName = session?.user?.name || 'User';
-  const dashboardTitle = userRole === 'ADMIN' ? 'Executive Dashboard' : `${userDepartment} Dashboard`;
+  const dashboardTitle = userRole === 'ADMIN' || userRole === 'EXECUTIVE' ? 'Executive Dashboard' : 'Dashboard';
 
-  // Mock data for stat cards
-  const stats = [
-    {
-      label: 'Total Tasks',
-      value: 142,
-      icon: CheckSquare,
-      change: 12,
-      accentColor: '#09203F',
-    },
-    {
-      label: 'Active Workflows',
-      value: 28,
-      icon: GitBranch,
-      change: 5,
-      accentColor: '#059669',
-    },
-    {
-      label: 'Pending Approvals',
-      value: 7,
-      icon: FileCheck,
-      change: -2,
-      accentColor: '#D97706',
-    },
-    {
-      label: 'Team Members',
-      value: 156,
-      icon: Users,
-      change: 8,
-      accentColor: '#7C3AED',
-    },
-  ];
+  const load = useCallback(async () => {
+    try {
+      setLoadError(null);
+      const [d, a] = await Promise.all([
+        api<DashboardData>('/api/dashboard'),
+        api<{ activities: Activity[] }>('/api/activity?pageSize=6'),
+      ]);
+      setData(d);
+      setActivities(a.activities);
+    } catch (e) {
+      setLoadError((e as Error).message);
+    }
+  }, []);
 
-  // Mock recent activity
-  const activities = [
-    {
-      id: 1,
-      user: 'Sarah Mitchell',
-      action: 'completed workflow',
-      entity: 'Quarterly Review Process',
-      timestamp: '2 hours ago',
-      status: 'success',
-    },
-    {
-      id: 2,
-      user: 'Marcus Chen',
-      action: 'requested approval',
-      entity: 'Budget Allocation Q2',
-      timestamp: '4 hours ago',
-      status: 'pending',
-    },
-    {
-      id: 3,
-      user: 'Elena Rodriguez',
-      action: 'created task',
-      entity: 'Visual Merchandising Update',
-      timestamp: '6 hours ago',
-      status: 'info',
-    },
-    {
-      id: 4,
-      user: 'James Wilson',
-      action: 'updated department',
-      entity: 'Sales Team Structure',
-      timestamp: '8 hours ago',
-      status: 'success',
-    },
-    {
-      id: 5,
-      user: 'Yuki Tanaka',
-      action: 'assigned workflow',
-      entity: 'Inventory Management',
-      timestamp: '10 hours ago',
-      status: 'info',
-    },
-  ];
-
-  // Mock department overview
-  const departments = [
-    { name: 'Sales', members: 24, tasks: 18, status: 'healthy' },
-    { name: 'Marketing', members: 16, tasks: 22, status: 'healthy' },
-    { name: 'Operations', members: 32, tasks: 28, status: 'warning' },
-    { name: 'Finance', members: 12, tasks: 5, status: 'healthy' },
-    { name: 'Human Resources', members: 8, tasks: 12, status: 'healthy' },
-    { name: 'IT Systems', members: 14, tasks: 8, status: 'healthy' },
-  ];
-
-  // Mock CRM deals
-  const deals = [
-    { id: 1, client: 'Lumière Collection', value: '$245,000', status: 'Negotiation' },
-    { id: 2, client: 'Étoile Bijoux', value: '$180,500', status: 'Proposal Sent' },
-    { id: 3, client: 'Precious Heritage', value: '$412,000', status: 'Closed' },
-  ];
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const handleCreateTask = async () => {
     if (!taskForm.title.trim()) {
+      setFormError('Task title is required');
       return;
     }
-
+    setSaving(true);
+    setFormError(null);
     try {
-      const response = await fetch('/api/tasks', {
+      await api('/api/tasks', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(taskForm),
+        body: JSON.stringify({
+          title: taskForm.title.trim(),
+          description: taskForm.description.trim() || undefined,
+          priority: taskForm.priority,
+          dueDate: taskForm.dueDate || undefined,
+        }),
       });
-
-      if (response.ok) {
-        setShowSuccessMessage(true);
-        setTaskForm({ title: '', description: '', priority: 'Medium', dueDate: '' });
-        setTimeout(() => {
-          setIsModalOpen(false);
-          setShowSuccessMessage(false);
-        }, 1500);
-      } else {
-        // Show success message even if API fails (for UI purposes)
-        setShowSuccessMessage(true);
-        setTaskForm({ title: '', description: '', priority: 'Medium', dueDate: '' });
-        setTimeout(() => {
-          setIsModalOpen(false);
-          setShowSuccessMessage(false);
-        }, 1500);
-      }
-    } catch (error) {
-      // Show success message even on error (UI works independently)
-      setShowSuccessMessage(true);
-      setTaskForm({ title: '', description: '', priority: 'Medium', dueDate: '' });
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setShowSuccessMessage(false);
-      }, 1500);
+      toast.success('Task created');
+      setTaskForm({ title: '', description: '', priority: 'MEDIUM', dueDate: '' });
+      setIsModalOpen(false);
+      void load();
+    } catch (e) {
+      // Real error surfaced - the old build showed success even on failure.
+      setFormError((e as Error).message);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const StatCard = ({
-    icon: Icon,
-    label,
-    value,
-    change,
-    accentColor,
-  }: {
-    icon: any;
-    label: string;
-    value: number;
-    change: number;
-    accentColor: string;
-  }) => (
-    <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
-      <div
-        className="h-1"
-        style={{ backgroundColor: accentColor }}
-      />
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div
-            className="p-3 rounded-lg"
-            style={{ backgroundColor: `${accentColor}10` }}
-          >
-            <Icon className="w-5 h-5" style={{ color: accentColor }} />
-          </div>
-          <Badge
-            variant={change >= 0 ? 'success' : 'destructive'}
-            className={cn(
-              'flex items-center gap-1',
-              change >= 0 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'
-            )}
-          >
-            <TrendingUp className="w-3 h-3" />
-            {Math.abs(change)}%
-          </Badge>
-        </div>
-        <h3 className="text-gray-500 text-sm font-medium mb-1">{label}</h3>
-        <p className="text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
-      </div>
-    </Card>
-  );
+  const stats = data
+    ? [
+        { label: 'Open Tasks', value: data.stats.openTasks, icon: CheckSquare, accentColor: '#09203F', href: '/tasks' },
+        { label: 'Pending Approvals', value: data.stats.pendingApprovals, icon: FileCheck, accentColor: '#D97706', href: '/approvals' },
+        { label: 'Active Workflows', value: data.stats.activeWorkflows, icon: GitBranch, accentColor: '#059669', href: '/workflows' },
+        { label: 'Team Members', value: data.stats.activeUsers, icon: Users, accentColor: '#7C3AED', href: '/admin/users' },
+      ]
+    : [];
 
   return (
     <div className="space-y-8">
-      {/* Premium Header Section */}
       <div className="bg-gradient-to-br from-white via-gray-50 to-white border border-gray-100 rounded-2xl p-8 mb-2">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-3">{dashboardTitle}</h1>
             <p className="text-gray-600 text-base">
-              Welcome back, <span className="font-semibold text-[#09203F]">{userName}</span>. Here's your command centre overview.
+              Welcome back, <span className="font-semibold text-[#09203F]">{userName}</span>. Here&apos;s your command
+              centre overview.
             </p>
           </div>
           <div className="hidden lg:flex items-center justify-center w-16 h-16 rounded-xl border border-gray-200 bg-white">
@@ -232,23 +147,63 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {loadError && (
+        <Card className="border-red-200 bg-red-50 p-6 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800">Could not load dashboard data</p>
+            <p className="text-xs text-red-600 mt-0.5">{loadError}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => void load()}>
+            Retry
+          </Button>
+        </Card>
+      )}
+
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <StatCard
-            key={stat.label}
-            icon={stat.icon}
-            label={stat.label}
-            value={stat.value}
-            change={stat.change}
-            accentColor={stat.accentColor}
-          />
-        ))}
+        {!data && !loadError
+          ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)
+          : stats.map((stat) => (
+              <Link key={stat.label} href={stat.href}>
+                <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer">
+                  <div className="h-1" style={{ backgroundColor: stat.accentColor }} />
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="p-3 rounded-lg" style={{ backgroundColor: `${stat.accentColor}10` }}>
+                        <stat.icon className="w-5 h-5" style={{ color: stat.accentColor }} />
+                      </div>
+                    </div>
+                    <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.label}</h3>
+                    <p className="text-3xl font-bold text-gray-900">{stat.value.toLocaleString()}</p>
+                  </div>
+                </Card>
+              </Link>
+            ))}
       </div>
+
+      {/* Pipeline summary */}
+      {data && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <h3 className="text-gray-500 text-sm font-medium mb-1">Open Pipeline Value</h3>
+            <p className="text-3xl font-bold text-[#09203F]">
+              ${data.stats.pipelineValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Leads and opportunities in the CRM</p>
+          </Card>
+          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <h3 className="text-gray-500 text-sm font-medium mb-1">Sales Closed (30 days)</h3>
+            <p className="text-3xl font-bold text-emerald-700">
+              ${data.stats.salesValue30d.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Deals moved to sale in the last 30 days</p>
+          </Card>
+        </div>
+      )}
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
         <div className="lg:col-span-2">
           <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             <div className="border-b border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-white">
@@ -257,49 +212,42 @@ export default function DashboardPage() {
                 Recent Activity
               </h2>
             </div>
-            <div className="divide-y divide-gray-100">
-              {activities.map((activity, index) => (
-                <div
-                  key={activity.id}
-                  className="p-6 hover:bg-gray-50/50 transition-colors"
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={cn(
-                        'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border',
-                        activity.status === 'success' && 'bg-emerald-50 border-emerald-200',
-                        activity.status === 'pending' && 'bg-amber-50 border-amber-200',
-                        activity.status === 'info' && 'bg-blue-50 border-blue-200'
-                      )}
-                    >
-                      {activity.status === 'success' && (
-                        <CheckSquare className="w-5 h-5 text-emerald-600" />
-                      )}
-                      {activity.status === 'pending' && (
-                        <AlertCircle className="w-5 h-5 text-amber-600" />
-                      )}
-                      {activity.status === 'info' && (
+            {!activities ? (
+              <div className="p-6 space-y-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 rounded-lg" />
+                ))}
+              </div>
+            ) : activities.length === 0 ? (
+              <div className="p-10 text-center">
+                <p className="text-sm text-gray-500">
+                  No activity yet. Actions like creating tasks, deals, and approvals will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {activities.map((activity) => (
+                  <div key={activity.id} className="p-5 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border bg-blue-50 border-blue-200">
                         <Plus className="w-5 h-5 text-blue-600" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">
-                        <span className="font-medium">{activity.user}</span>
-                        {' ' + activity.action + ' '}
-                        <span className="text-[#09203F] font-medium">{activity.entity}</span>
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">{activity.timestamp}</p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">
+                          <span className="font-medium">{activity.user?.name ?? 'Someone'}</span>{' '}
+                          <span className="text-gray-700">{activity.description}</span>
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(activity.createdAt)}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
 
-        {/* Right Sidebar */}
         <div className="flex flex-col gap-6">
-          {/* Department Overview */}
           <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             <div className="border-b border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-white">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -308,32 +256,32 @@ export default function DashboardPage() {
               </h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {departments.slice(0, 4).map((dept) => (
-                <div
-                  key={dept.name}
-                  className="p-4 hover:bg-gray-50/50 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-900">{dept.name}</h3>
-                    <span
-                      className={cn(
-                        'w-2 h-2 rounded-full flex-shrink-0 mt-1',
-                        dept.status === 'healthy' && 'bg-emerald-500',
-                        dept.status === 'warning' && 'bg-amber-500'
-                      )}
-                    />
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>{dept.members} members</span>
-                    <span className="text-gray-300">•</span>
-                    <span>{dept.tasks} tasks</span>
-                  </div>
-                </div>
-              ))}
+              {!data
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="p-4">
+                      <Skeleton className="h-10 rounded-lg" />
+                    </div>
+                  ))
+                : data.departments.slice(0, 5).map((dept) => (
+                    <Link
+                      key={dept.id}
+                      href={`/departments/${dept.slug}`}
+                      className="block p-4 hover:bg-gray-50/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className="text-sm font-medium text-gray-900">{dept.name}</h3>
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span>{dept.members} members</span>
+                        <span className="text-gray-300">•</span>
+                        <span>{dept.openTasks} open tasks</span>
+                      </div>
+                    </Link>
+                  ))}
             </div>
           </Card>
 
-          {/* Recent CRM Deals */}
           <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             <div className="border-b border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-white">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -342,21 +290,35 @@ export default function DashboardPage() {
               </h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {deals.map((deal) => (
-                <div
-                  key={deal.id}
-                  className="p-4 hover:bg-gray-50/50 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-900">{deal.client}</h3>
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
+              {!data ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-4">
+                    <Skeleton className="h-10 rounded-lg" />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">{deal.status}</span>
-                    <span className="text-sm font-semibold text-[#09203F]">{deal.value}</span>
-                  </div>
+                ))
+              ) : data.recentDeals.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-sm text-gray-500">No deals yet.</p>
+                  <Link href="/crm" className="text-sm text-[#09203F] font-medium hover:underline">
+                    Add your first deal →
+                  </Link>
                 </div>
-              ))}
+              ) : (
+                data.recentDeals.map((deal) => (
+                  <Link key={deal.id} href="/crm" className="block p-4 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="text-sm font-medium text-gray-900 truncate pr-2">{deal.title}</h3>
+                      <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        {deal.contact?.name ?? 'No contact'} · {STAGE_LABELS[deal.stage] ?? deal.stage}
+                      </span>
+                      <span className="text-sm font-semibold text-[#09203F]">${deal.value.toLocaleString()}</span>
+                    </div>
+                  </Link>
+                ))
+              )}
             </div>
           </Card>
         </div>
@@ -368,45 +330,48 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium transition-all duration-200 hover:border-gray-400"
+            className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Task
           </Button>
-          <Button
-            className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium transition-all duration-200 hover:border-gray-400"
-          >
-            <GitBranch className="w-4 h-4 mr-2" />
-            Start Workflow
-          </Button>
-          <Button
-            className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium transition-all duration-200 hover:border-gray-400"
-          >
-            <FileCheck className="w-4 h-4 mr-2" />
-            Request Approval
-          </Button>
-          <Button
-            className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-12 transition-all duration-200"
-          >
-            <TrendingUp className="w-4 h-4 mr-2" />
-            View Reports
-          </Button>
+          <Link href="/workflows" className="contents">
+            <Button className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium w-full">
+              <GitBranch className="w-4 h-4 mr-2" />
+              Start Workflow
+            </Button>
+          </Link>
+          <Link href="/approvals?new=1" className="contents">
+            <Button className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium w-full">
+              <FileCheck className="w-4 h-4 mr-2" />
+              Request Approval
+            </Button>
+          </Link>
+          <Link href="/kpis" className="contents">
+            <Button className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-12 w-full">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              View KPIs
+            </Button>
+          </Link>
         </div>
       </div>
 
       {/* New Task Modal */}
       <Modal
         open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) setFormError(null);
+        }}
         title="Create New Task"
         description="Add a new task to your command centre"
         size="lg"
       >
         <div className="space-y-6">
-          {showSuccessMessage && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
-              <CheckSquare className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-              <span className="text-sm font-medium text-emerald-800">Task created successfully!</span>
+          {formError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-red-800">{formError}</span>
             </div>
           )}
 
@@ -419,39 +384,34 @@ export default function DashboardPage() {
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <textarea
               placeholder="Enter task description (optional)"
               value={taskForm.description}
               onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
               className={cn(
                 'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 transition-colors duration-200 min-h-24 resize-none',
-                'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20',
-                'disabled:opacity-50 disabled:cursor-not-allowed'
+                'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20'
               )}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Priority
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
               <select
                 value={taskForm.priority}
                 onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
                 className={cn(
-                  'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 transition-colors duration-200',
+                  'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900',
                   'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20'
                 )}
               >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Urgent">Urgent</option>
-                <option value="Critical">Critical</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+                <option value="CRITICAL">Critical</option>
               </select>
             </div>
 
@@ -466,13 +426,15 @@ export default function DashboardPage() {
           <div className="flex gap-3 pt-4">
             <Button
               onClick={handleCreateTask}
-              className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-11 transition-all duration-200"
+              loading={saving}
+              className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-11"
             >
               Create Task
             </Button>
             <Button
               onClick={() => setIsModalOpen(false)}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium h-11 transition-all duration-200"
+              disabled={saving}
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium h-11"
             >
               Cancel
             </Button>

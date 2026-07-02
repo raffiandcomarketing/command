@@ -12,7 +12,7 @@ interface DropdownItem {
   divider?: boolean
 }
 
-interface DropdownProps extends React.HTMLAttributes<HTMLDivElement> {
+interface DropdownProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   items: DropdownItem[]
   trigger: React.ReactNode
   onSelect?: (value: string | number) => void

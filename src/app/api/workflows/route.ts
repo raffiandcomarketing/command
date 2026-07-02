@@ -1,115 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireSession, requireRole, getClientIp } from '@/lib/api/guard';
+import { writeAudit } from '@/lib/api/audit';
+import { createWorkflowSchema, WorkflowTriggerTypeEnum } from '@/lib/validate';
+import { slugify } from '@/lib/utils';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const GET = handle(async (req: NextRequest) => {
+  await requireSession();
 
-    const searchParams = request.nextUrl.searchParams;
-    const departmentId = searchParams.get('departmentId');
-    const status = searchParams.get('status');
-    const triggerType = searchParams.get('triggerType');
+  const sp = req.nextUrl.searchParams;
+  const departmentId = sp.get('departmentId') || undefined;
+  const triggerParam = WorkflowTriggerTypeEnum.safeParse(sp.get('triggerType')?.toUpperCase());
+  const isActive = sp.get('isActive');
+  const templates = sp.get('templates');
 
-    try {
-      const workflows = await db.workflow.findMany({
-        where: {
-          ...(departmentId && { departmentId }),
-          ...(status && { status }),
-          ...(triggerType && { triggerType }),
-        },
-        include: {
-          department: { select: { id: true, name: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+  const where: Prisma.WorkflowWhereInput = {
+    ...(departmentId && { departmentId }),
+    ...(triggerParam.success && { triggerType: triggerParam.data }),
+    ...(isActive !== null && isActive !== undefined && { isActive: isActive === 'true' }),
+    ...(templates !== null && templates !== undefined && { isTemplate: templates === 'true' }),
+  };
 
-      return NextResponse.json({ workflows });
-    } catch {
-      // Fallback mock data
-      return NextResponse.json({
-        workflows: [
-          {
-            id: '1',
-            name: 'Sample Workflow',
-            description: 'A sample workflow',
-            status: 'ACTIVE',
-            triggerType: 'MANUAL',
-            departmentId: '1',
-            definition: { steps: [] },
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/workflows error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const workflows = await db.workflow.findMany({
+    where,
+    include: {
+      department: { select: { id: true, name: true, slug: true } },
+      _count: { select: { workflowInstances: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  return NextResponse.json({ workflows });
+});
 
-    const body = await request.json();
-    const { name, description, triggerType, departmentId, definition } = body;
+export const POST = handle(async (req: NextRequest) => {
+  const user = await requireSession();
+  requireRole(user, 'ADMIN', 'EXECUTIVE', 'MANAGER');
 
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid workflow name' },
-        { status: 400 }
-      );
-    }
+  const data = await parseBody(req, createWorkflowSchema);
 
-    try {
-      const workflow = await db.workflow.create({
-        data: {
-          name,
-          description: description || '',
-          triggerType: triggerType || 'MANUAL',
-          status: 'DRAFT',
-          departmentId: departmentId || null,
-          definition: definition || { steps: [] },
-        },
-        include: {
-          department: { select: { id: true, name: true } },
-        },
-      });
+  const workflow = await db.workflow.create({
+    data: {
+      name: data.name,
+      slug: data.slug ?? slugify(data.name),
+      description: data.description ?? null,
+      departmentId: data.departmentId ?? null,
+      triggerType: data.triggerType,
+      triggerConfig: (data.triggerConfig as object) ?? {},
+      steps: data.steps as object[],
+      isActive: data.isActive ?? true,
+      isTemplate: data.isTemplate ?? false,
+    },
+    include: { department: { select: { id: true, name: true, slug: true } } },
+  });
 
-      return NextResponse.json({ workflow }, { status: 201 });
-    } catch {
-      // Fallback mock response
-      const mockWorkflow = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        description: description || '',
-        triggerType: triggerType || 'MANUAL',
-        status: 'DRAFT',
-        departmentId: departmentId || null,
-      };
-      return NextResponse.json({ workflow: mockWorkflow }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/workflows error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  void writeAudit({
+    userId: user.id,
+    action: 'create',
+    entity: 'Workflow',
+    entityId: workflow.id,
+    changes: { name: workflow.name, triggerType: workflow.triggerType },
+    ipAddress: getClientIp(req),
+  });
+
+  return NextResponse.json({ workflow }, { status: 201 });
+});

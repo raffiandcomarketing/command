@@ -1,141 +1,78 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireSession, requireRole, getClientIp } from '@/lib/api/guard';
+import { notFound } from '@/lib/api/errors';
+import { writeAudit } from '@/lib/api/audit';
+import { updateWorkflowSchema } from '@/lib/validate';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const GET = handle(async (_req: NextRequest, { params }) => {
+  await requireSession();
+  const workflow = await db.workflow.findUnique({
+    where: { id: params.id },
+    include: {
+      department: { select: { id: true, name: true, slug: true } },
+      workflowInstances: {
+        orderBy: { startedAt: 'desc' },
+        take: 10,
+        include: { workflowSteps: { orderBy: { stepIndex: 'asc' } } },
+      },
+    },
+  });
+  if (!workflow) throw notFound('Workflow not found');
+  return NextResponse.json({ workflow });
+});
 
-    try {
-      const workflow = await db.workflow.findUnique({
-        where: { id: params.id },
-        include: {
-          department: { select: { id: true, name: true } },
-        },
-      });
+export const PATCH = handle(async (req: NextRequest, { params }) => {
+  const user = await requireSession();
+  requireRole(user, 'ADMIN', 'EXECUTIVE', 'MANAGER');
 
-      if (!workflow) {
-        return NextResponse.json(
-          { error: 'Workflow not found' },
-          { status: 404 }
-        );
-      }
+  const data = await parseBody(req, updateWorkflowSchema);
 
-      return NextResponse.json({ workflow });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        workflow: {
-          id: params.id,
-          name: 'Sample Workflow',
-          description: 'Sample workflow description',
-          status: 'ACTIVE',
-          triggerType: 'MANUAL',
-          definition: { steps: [] },
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`GET /api/workflows/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const workflow = await db.workflow.update({
+    where: { id: params.id },
+    data: {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.departmentId !== undefined && { departmentId: data.departmentId }),
+      ...(data.triggerType !== undefined && { triggerType: data.triggerType }),
+      ...(data.triggerConfig !== undefined && { triggerConfig: data.triggerConfig as object }),
+      ...(data.steps !== undefined && { steps: data.steps as object[] }),
+      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      ...(data.isTemplate !== undefined && { isTemplate: data.isTemplate }),
+    },
+    include: { department: { select: { id: true, name: true, slug: true } } },
+  });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  void writeAudit({
+    userId: user.id,
+    action: 'update',
+    entity: 'Workflow',
+    entityId: workflow.id,
+    changes: data,
+    ipAddress: getClientIp(req),
+  });
 
-    const body = await request.json();
-    const { name, description, status, triggerType, definition } = body;
+  return NextResponse.json({ workflow });
+});
 
-    try {
-      const workflow = await db.workflow.update({
-        where: { id: params.id },
-        data: {
-          ...(name && { name }),
-          ...(description !== undefined && { description }),
-          ...(status && { status }),
-          ...(triggerType && { triggerType }),
-          ...(definition && { definition }),
-        },
-        include: {
-          department: { select: { id: true, name: true } },
-        },
-      });
+export const DELETE = handle(async (req: NextRequest, { params }) => {
+  const user = await requireSession();
+  requireRole(user, 'ADMIN', 'EXECUTIVE');
 
-      return NextResponse.json({ workflow });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        workflow: {
-          id: params.id,
-          name: name || 'Sample Workflow',
-          description: description || '',
-          status: status || 'ACTIVE',
-          triggerType: triggerType || 'MANUAL',
-          definition: definition || { steps: [] },
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`PATCH /api/workflows/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const wf = await db.workflow.findUnique({ where: { id: params.id } });
+  if (!wf) throw notFound('Workflow not found');
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  await db.workflow.delete({ where: { id: params.id } });
 
-    try {
-      await db.workflow.delete({
-        where: { id: params.id },
-      });
+  void writeAudit({
+    userId: user.id,
+    action: 'delete',
+    entity: 'Workflow',
+    entityId: params.id,
+    changes: { name: wf.name },
+    ipAddress: getClientIp(req),
+  });
 
-      return NextResponse.json({ success: true }, { status: 204 });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({ success: true }, { status: 204 });
-    }
-  } catch (error) {
-    console.error(`DELETE /api/workflows/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ success: true });
+});

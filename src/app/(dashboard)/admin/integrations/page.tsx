@@ -1,290 +1,286 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Modal } from '@/components/ui/modal';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/toast';
+import { api } from '@/lib/client/api';
+import { Plug, Plus, Power, RefreshCcw, AlertCircle, Trash2, Info } from 'lucide-react';
 
 interface Integration {
   id: string;
-  type: string;
   name: string;
-  isConnected: boolean;
-  syncStatus: string;
-  lastSyncAt?: Date | null;
-  config: Record<string, any>;
+  slug: string;
+  type: string;
+  provider: string;
+  isActive: boolean;
+  lastSyncAt: string | null;
+  status: 'configured' | 'inactive';
+  syncAvailable: boolean;
+  department: { id: string; name: string } | null;
 }
 
-const integrationTypes = [
-  { id: 'stripe', name: 'Stripe', icon: '💳', color: 'from-purple-600 to-purple-700' },
-  { id: 'shopify', name: 'Shopify', icon: '🛍️', color: 'from-green-600 to-green-700' },
-  { id: 'salesforce', name: 'Salesforce', icon: '☁️', color: 'from-blue-600 to-blue-700' },
-  { id: 'hubspot', name: 'HubSpot', icon: '📊', color: 'from-orange-600 to-orange-700' },
-  { id: 'slack', name: 'Slack', icon: '💬', color: 'from-pink-600 to-pink-700' },
-  { id: 'zendesk', name: 'Zendesk', icon: '🎫', color: 'from-yellow-600 to-yellow-700' },
+const TYPES = ['POS', 'ECOMMERCE', 'EMAIL', 'SMS', 'CALENDAR', 'ERP', 'HR', 'FINANCE', 'SHIPPING', 'ANALYTICS', 'CUSTOM'];
+
+/** Roadmap Wave-1/2 providers surfaced as suggestions (assessment §10). */
+const SUGGESTED = [
+  { provider: 'Lightspeed', type: 'POS', note: 'POS + serialised inventory (Wave 1)' },
+  { provider: 'Google Workspace', type: 'CALENDAR', note: 'SSO + calendar (Wave 1)' },
+  { provider: 'Klaviyo', type: 'EMAIL', note: 'Email/SMS marketing (Wave 1)' },
+  { provider: 'Shopify', type: 'ECOMMERCE', note: 'Omnichannel (Wave 2)' },
+  { provider: 'Twilio', type: 'SMS', note: 'Client comms (Wave 2)' },
 ];
 
 export default function IntegrationsPage() {
-  const [integrations, setIntegrations] = useState<Integration[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showConfig, setShowConfig] = useState<string | null>(null);
-  const [configData, setConfigData] = useState<Record<string, string>>({});
+  const toast = useToast();
+  const [integrations, setIntegrations] = useState<Integration[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchIntegrations();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', provider: '', type: 'CUSTOM' });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      setLoadError(null);
+      const res = await api<{ integrations: Integration[] }>('/api/integrations');
+      setIntegrations(res.integrations);
+    } catch (e) {
+      setLoadError((e as Error).message);
+      setIntegrations([]);
+    }
   }, []);
 
-  const fetchIntegrations = async () => {
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const toggle = async (i: Integration) => {
+    setBusyId(i.id);
     try {
-      const response = await fetch('/api/integrations');
-      const data = await response.json();
-      setIntegrations(data.integrations || []);
-    } catch (error) {
-      console.error('Failed to fetch integrations:', error);
-      setIntegrations([
-        {
-          id: '1',
-          type: 'stripe',
-          name: 'Stripe',
-          isConnected: true,
-          syncStatus: 'SUCCESS',
-          lastSyncAt: new Date(),
-          config: {},
-        },
-      ]);
+      await api(`/api/integrations/${i.id}`, { method: 'PATCH', body: JSON.stringify({ isActive: !i.isActive }) });
+      toast.success(`${i.name} ${i.isActive ? 'deactivated' : 'activated'}`);
+      void load();
+    } catch (e) {
+      toast.error((e as Error).message);
     } finally {
-      setLoading(false);
+      setBusyId(null);
     }
   };
 
-  const handleConnect = async (type: string) => {
-    const integration = integrations.find((i) => i.type === type);
-    if (integration) {
-      setShowConfig(integration.id);
-    } else {
-      const newIntegration = {
-        type,
-        name: integrationTypes.find((t) => t.id === type)?.name || type,
-        config: configData,
-      };
-
-      try {
-        const response = await fetch('/api/integrations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newIntegration),
-        });
-
-        if (response.ok) {
-          setConfigData({});
-          fetchIntegrations();
-        }
-      } catch (error) {
-        console.error('Failed to create integration:', error);
-      }
+  const trySync = async (i: Integration) => {
+    setBusyId(i.id);
+    try {
+      await api(`/api/integrations/${i.id}/sync`, { method: 'POST' });
+      void load();
+    } catch (e) {
+      // Expected today: adapters land in roadmap Sprint 9 - surface honestly.
+      toast.info((e as Error).message);
+    } finally {
+      setBusyId(null);
     }
   };
 
-  const handleDisconnect = async (id: string) => {
-    if (!confirm('Are you sure you want to disconnect this integration?')) {
+  const remove = async (i: Integration) => {
+    if (!window.confirm(`Remove integration "${i.name}"?`)) return;
+    setBusyId(i.id);
+    try {
+      await api(`/api/integrations/${i.id}`, { method: 'DELETE' });
+      toast.success('Integration removed');
+      void load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const submit = async () => {
+    if (!form.name.trim() || !form.provider.trim()) {
+      setFormError('Name and provider are required');
       return;
     }
-
+    setSaving(true);
+    setFormError(null);
     try {
-      await fetch(`/api/integrations/${id}`, { method: 'DELETE' });
-      fetchIntegrations();
-    } catch (error) {
-      console.error('Failed to disconnect integration:', error);
-    }
-  };
-
-  const handleSync = async (id: string) => {
-    try {
-      await fetch(`/api/integrations/${id}/sync`, {
+      await api('/api/integrations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: form.name.trim(), provider: form.provider.trim(), type: form.type }),
       });
-      fetchIntegrations();
-    } catch (error) {
-      console.error('Failed to sync integration:', error);
+      toast.success('Integration configured');
+      setModalOpen(false);
+      void load();
+    } catch (e) {
+      setFormError((e as Error).message);
+    } finally {
+      setSaving(false);
     }
   };
-
-  if (loading) {
-    return <div className="p-8 text-gray-600">Loading integrations...</div>;
-  }
-
-  const connectedTypes = new Set(integrations.map((i) => i.type));
-  const availableIntegrations = integrationTypes.filter(
-    (t) => !connectedTypes.has(t.id)
-  );
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          Integrations
-        </h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Integrations</h1>
+          <p className="text-gray-500">Configure connections to external systems.</p>
+        </div>
+        <Button
+          onClick={() => {
+            setForm({ name: '', provider: '', type: 'CUSTOM' });
+            setFormError(null);
+            setModalOpen(true);
+          }}
+          className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Integration
+        </Button>
+      </div>
 
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Connected Services
-        </h2>
-        <div className="grid grid-cols-1 gap-4">
-          {integrations.map((integration) => (
-            <Card
-              key={integration.id}
-              className="bg-white border border-gray-200 rounded-xl p-6"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="text-3xl">
-                      {integrationTypes.find((t) => t.id === integration.type)
-                        ?.icon || '🔌'}
+      <div className="flex items-start gap-3 text-sm text-gray-600 bg-blue-50 border border-blue-100 rounded-lg p-4">
+        <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+        <p>
+          Integrations are stored as configuration today; statuses shown here are real. Live data sync (Lightspeed,
+          Klaviyo, Google Workspace SSO) ships in integration Wave&nbsp;1 — go-live roadmap Sprint&nbsp;9. No fake
+          &ldquo;connected&rdquo; badges.
+        </p>
+      </div>
+
+      {loadError && (
+        <Card className="border-red-200 bg-red-50 p-6 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800">Could not load integrations</p>
+            <p className="text-xs text-red-600 mt-0.5">{loadError}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => void load()}>
+            Retry
+          </Button>
+        </Card>
+      )}
+
+      {integrations === null && !loadError && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 rounded-xl" />
+          ))}
+        </div>
+      )}
+
+      {integrations !== null && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {integrations.map((i) => (
+            <Card key={i.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div className="p-6 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#09203F]/5 flex items-center justify-center">
+                      <Plug className="w-5 h-5 text-[#09203F]" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {integration.name}
-                      </h3>
-                      <Badge className="bg-emerald-600 text-white mt-1">
-                        Connected
-                      </Badge>
+                      <h3 className="font-semibold text-gray-900">{i.name}</h3>
+                      <p className="text-xs text-gray-500">
+                        {i.provider} · {i.type.toLowerCase()}
+                      </p>
                     </div>
                   </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      {integration.syncStatus === 'SUCCESS' ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-600" />
-                      ) : integration.syncStatus === 'SYNCING' ? (
-                        <Clock className="w-4 h-4 text-amber-500 animate-spin" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-red-600" />
-                      )}
-                      <span className="text-gray-600">
-                        Status:{' '}
-                        <span
-                          className={
-                            integration.syncStatus === 'SUCCESS'
-                              ? 'text-emerald-600'
-                              : 'text-amber-600'
-                          }
-                        >
-                          {integration.syncStatus}
-                        </span>
-                      </span>
-                    </div>
-
-                    {integration.lastSyncAt && (
-                      <div className="text-gray-600">
-                        Last sync:{' '}
-                        <span className="text-[#09203F] font-semibold">
-                          {new Date(integration.lastSyncAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  <Badge
+                    variant="outline"
+                    className={
+                      i.status === 'configured'
+                        ? 'bg-blue-500/10 text-blue-700 border-blue-200'
+                        : 'bg-gray-500/10 text-gray-500 border-gray-200'
+                    }
+                  >
+                    {i.status}
+                  </Badge>
                 </div>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleSync(integration.id)}
-                    className="p-2 hover:bg-gray-100 rounded transition-colors"
-                    title="Sync now"
-                  >
-                    <RefreshCw className="w-5 h-5 text-[#09203F]" />
-                  </button>
-                  <button
-                    onClick={() => handleDisconnect(integration.id)}
-                    className="p-2 hover:bg-gray-100 rounded transition-colors"
-                    title="Disconnect"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-600" />
-                  </button>
+                <p className="text-xs text-gray-400">
+                  {i.lastSyncAt ? `Last sync ${new Date(i.lastSyncAt).toLocaleString()}` : 'Never synced — adapter pending (Sprint 9)'}
+                </p>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                  <Button size="sm" variant="outline" disabled={busyId === i.id} onClick={() => void trySync(i)}>
+                    <RefreshCcw className="w-4 h-4 mr-1.5" />
+                    Sync
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={busyId === i.id} onClick={() => void toggle(i)}>
+                    <Power className="w-4 h-4 mr-1.5" />
+                    {i.isActive ? 'Deactivate' : 'Activate'}
+                  </Button>
+                  <Button size="sm" variant="ghost" disabled={busyId === i.id} onClick={() => void remove(i)}>
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </Button>
                 </div>
               </div>
             </Card>
           ))}
-        </div>
-      </div>
 
-      {availableIntegrations.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Available Services
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availableIntegrations.map((integration) => (
-              <Card
-                key={integration.id}
-                className="bg-white border border-gray-200 rounded-xl p-6 hover:border-[#09203F]/20 transition-colors cursor-pointer"
-              >
-                <div className="text-center">
-                  <div className="text-5xl mb-3">{integration.icon}</div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    {integration.name}
-                  </h3>
-                  <Button
-                    onClick={() => handleConnect(integration.id)}
-                    className="w-full bg-[#09203F] hover:bg-[#0a2651] text-white"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Connect
-                  </Button>
+          {/* Suggested roadmap providers */}
+          {SUGGESTED.filter((s) => !integrations.some((i) => i.provider.toLowerCase() === s.provider.toLowerCase())).map((s) => (
+            <Card key={s.provider} className="bg-gray-50/60 border border-dashed border-gray-300 rounded-xl">
+              <div className="p-6 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
+                    <Plug className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-700">{s.provider}</h3>
+                    <p className="text-xs text-gray-500">{s.note}</p>
+                  </div>
                 </div>
-              </Card>
-            ))}
-          </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setForm({ name: s.provider, provider: s.provider, type: s.type });
+                    setFormError(null);
+                    setModalOpen(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Configure
+                </Button>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
 
-      {showConfig && (
-        <Card className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Integration Configuration
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Key
-              </label>
-              <input
-                type="password"
-                placeholder="Enter your API key"
-                onChange={(e) =>
-                  setConfigData({ ...configData, apiKey: e.target.value })
-                }
-                className="w-full px-4 py-2 bg-white border border-gray-200 rounded text-gray-900 focus:outline-none focus:border-[#09203F]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Webhook URL (optional)
-              </label>
-              <input
-                type="text"
-                placeholder="https://your-domain.com/webhook"
-                onChange={(e) =>
-                  setConfigData({ ...configData, webhookUrl: e.target.value })
-                }
-                className="w-full px-4 py-2 bg-white border border-gray-200 rounded text-gray-900 focus:outline-none focus:border-[#09203F]"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button className="bg-[#09203F] hover:bg-[#0a2651] text-white">
-                Save Configuration
-              </Button>
-              <Button
-                onClick={() => setShowConfig(null)}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-900"
-              >
-                Cancel
-              </Button>
-            </div>
+      <Modal
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setFormError(null);
+        }}
+        title="Add Integration"
+        description="Stores the configuration record; live sync arrives with the adapter (Sprint 9)"
+        size="md"
+      >
+        <div className="space-y-4">
+          {formError && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">{formError}</div>}
+          <Input label="Display Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g., Lightspeed POS" />
+          <Input label="Provider *" value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })} placeholder="e.g., Lightspeed" />
+          <Select label="Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} options={TYPES.map((t) => ({ value: t, label: t.toLowerCase() }))} />
+          <div className="flex gap-3 pt-2">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white">
+              Save
+            </Button>
+            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving} className="flex-1">
+              Cancel
+            </Button>
           </div>
-        </Card>
-      )}
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -1,79 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireSession } from '@/lib/api/guard';
+import { markReadSchema } from '@/lib/validate';
 
-export async function PATCH(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const PATCH = handle(async (req: NextRequest) => {
+  const user = await requireSession();
+  const data = await parseBody(req, markReadSchema);
 
-    const body = await request.json();
-    const { notificationIds, markAllAsRead } = body;
+  const where = data.markAllAsRead
+    ? { userId: user.id, isRead: false }
+    : { id: { in: data.notificationIds! }, userId: user.id };
 
-    if (!notificationIds && !markAllAsRead) {
-      return NextResponse.json(
-        { error: 'Either notificationIds or markAllAsRead is required' },
-        { status: 400 }
-      );
-    }
+  const result = await db.notification.updateMany({
+    where,
+    data: { isRead: true, readAt: new Date() },
+  });
 
-    try {
-      if (markAllAsRead) {
-        const result = await db.notification.updateMany({
-          where: {
-            userId: session.user.id,
-            readAt: null,
-          },
-          data: {
-            readAt: new Date(),
-          },
-        });
-
-        return NextResponse.json({
-          message: `Marked ${result.count} notifications as read`,
-          count: result.count,
-        });
-      }
-
-      if (Array.isArray(notificationIds) && notificationIds.length > 0) {
-        const result = await db.notification.updateMany({
-          where: {
-            id: { in: notificationIds },
-            userId: session.user.id,
-          },
-          data: {
-            readAt: new Date(),
-          },
-        });
-
-        return NextResponse.json({
-          message: `Marked ${result.count} notifications as read`,
-          count: result.count,
-        });
-      }
-
-      return NextResponse.json(
-        { error: 'No notifications to update' },
-        { status: 400 }
-      );
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        message: 'Notifications marked as read',
-        count: 1,
-      });
-    }
-  } catch (error) {
-    console.error('PATCH /api/notifications/read error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ count: result.count });
+});

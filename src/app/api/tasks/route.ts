@@ -1,155 +1,109 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody, getPagination } from '@/lib/api/http';
+import { requireSession, assertCanWrite, getClientIp } from '@/lib/api/guard';
+import { writeAudit, logActivity } from '@/lib/api/audit';
+import { createTaskSchema, TaskStatusEnum, TaskPriorityEnum } from '@/lib/validate';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+const taskInclude = {
+  assignee: { select: { id: true, name: true, email: true, avatar: true } },
+  creator: { select: { id: true, name: true } },
+  department: { select: { id: true, name: true, slug: true } },
+} satisfies Prisma.TaskInclude;
 
-    const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const priority = searchParams.get('priority');
-    const departmentId = searchParams.get('departmentId');
-    const assigneeId = searchParams.get('assigneeId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+export const GET = handle(async (req: NextRequest) => {
+  await requireSession();
 
-    const skip = (page - 1) * limit;
+  const sp = req.nextUrl.searchParams;
+  const statusParam = TaskStatusEnum.safeParse(sp.get('status')?.toUpperCase());
+  const priorityParam = TaskPriorityEnum.safeParse(sp.get('priority')?.toUpperCase());
+  const departmentId = sp.get('departmentId') || undefined;
+  const assigneeId = sp.get('assigneeId') || undefined;
+  const search = sp.get('search')?.trim() || undefined;
+  const p = getPagination(req);
 
-    try {
-      const tasks = await db.task.findMany({
-        where: {
-          ...(status && { status }),
-          ...(priority && { priority }),
-          ...(departmentId && { departmentId }),
-          ...(assigneeId && { assigneeId }),
-        },
-        include: {
-          assignee: { select: { id: true, name: true, email: true } },
-          department: { select: { id: true, name: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      });
+  const where: Prisma.TaskWhereInput = {
+    ...(statusParam.success && { status: statusParam.data }),
+    ...(priorityParam.success && { priority: priorityParam.data }),
+    ...(departmentId && { departmentId }),
+    ...(assigneeId && { assigneeId }),
+    ...(search && {
+      OR: [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+  };
 
-      const total = await db.task.count({
-        where: {
-          ...(status && { status }),
-          ...(priority && { priority }),
-          ...(departmentId && { departmentId }),
-          ...(assigneeId && { assigneeId }),
-        },
-      });
+  const [tasks, total] = await Promise.all([
+    db.task.findMany({
+      where,
+      include: taskInclude,
+      orderBy: { createdAt: 'desc' },
+      skip: p.skip,
+      take: p.take,
+    }),
+    db.task.count({ where }),
+  ]);
 
-      return NextResponse.json({
-        tasks,
-        pagination: {
-          total,
-          page,
-          limit,
-          pages: Math.ceil(total / limit),
-        },
-      });
-    } catch {
-      // Fallback mock data
-      return NextResponse.json({
-        tasks: [
-          {
-            id: '1',
-            title: 'Sample Task',
-            description: 'A sample task',
-            status: 'PENDING',
-            priority: 'HIGH',
-            departmentId: '1',
-            assigneeId: 'user1',
-            assignee: { id: 'user1', name: 'John Doe', email: 'john@example.com' },
-            department: { id: '1', name: 'Sales' },
-          },
-        ],
-        pagination: { total: 1, page: 1, limit: 20, pages: 1 },
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/tasks error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  return NextResponse.json({
+    tasks,
+    pagination: { total, page: p.page, pageSize: p.pageSize, pages: Math.max(1, Math.ceil(total / p.pageSize)) },
+  });
+});
+
+export const POST = handle(async (req: NextRequest) => {
+  const user = await requireSession();
+  assertCanWrite(user);
+
+  const data = await parseBody(req, createTaskSchema);
+
+  const task = await db.task.create({
+    data: {
+      title: data.title,
+      description: data.description ?? null,
+      status: data.status ?? 'PENDING',
+      priority: data.priority ?? 'MEDIUM',
+      dueDate: data.dueDate ?? null,
+      assigneeId: data.assigneeId ?? null,
+      departmentId: data.departmentId ?? null,
+      roleId: data.roleId ?? null,
+      parentTaskId: data.parentTaskId ?? null,
+      tags: data.tags ?? [],
+      creatorId: user.id,
+    },
+    include: taskInclude,
+  });
+
+  void writeAudit({
+    userId: user.id,
+    action: 'create',
+    entity: 'Task',
+    entityId: task.id,
+    changes: { title: task.title, status: task.status, priority: task.priority },
+    ipAddress: getClientIp(req),
+  });
+  void logActivity({
+    userId: user.id,
+    type: 'task.created',
+    description: `created task "${task.title}"`,
+    entityType: 'Task',
+    entityId: task.id,
+    departmentId: task.departmentId,
+  });
+
+  if (task.assigneeId && task.assigneeId !== user.id) {
+    await db.notification.create({
+      data: {
+        userId: task.assigneeId,
+        type: 'TASK',
+        title: 'New task assigned to you',
+        message: `${user.name} assigned you "${task.title}"`,
+        link: '/tasks',
+      },
+    });
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const body = await request.json();
-    const {
-      title,
-      description,
-      status,
-      priority,
-      departmentId,
-      assigneeId,
-      dueDate,
-    } = body;
-
-    if (!title || typeof title !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid task title' },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const task = await db.task.create({
-        data: {
-          title,
-          description: description || '',
-          status: status || 'PENDING',
-          priority: priority || 'MEDIUM',
-          departmentId,
-          assigneeId: assigneeId || null,
-          dueDate: dueDate ? new Date(dueDate) : null,
-        },
-        include: {
-          assignee: { select: { id: true, name: true, email: true } },
-          department: { select: { id: true, name: true } },
-        },
-      });
-
-      return NextResponse.json({ task }, { status: 201 });
-    } catch {
-      // Fallback mock response
-      const mockTask = {
-        id: Math.random().toString(36).substr(2, 9),
-        title,
-        description: description || '',
-        status: status || 'PENDING',
-        priority: priority || 'MEDIUM',
-        departmentId,
-        assigneeId: assigneeId || null,
-      };
-      return NextResponse.json({ task: mockTask }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/tasks error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ task }, { status: 201 });
+});

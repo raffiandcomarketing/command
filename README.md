@@ -60,8 +60,8 @@ npx prisma generate
 cp .env.example .env
 # Edit .env with your database URL and secrets
 
-# Push schema to database
-npx prisma db push
+# Apply database migrations
+npx prisma migrate deploy
 
 # Seed the database
 npm run db:seed
@@ -72,10 +72,17 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-### Default Login
+### First Admin Login
 
-- Email: `admin@raffi.com`
-- Password: `admin123`
+There are **no default credentials**. The seed script creates (or rotates) the
+admin account from environment variables:
+
+```bash
+ADMIN_EMAIL=you@yourcompany.com ADMIN_PASSWORD='a-strong-password' npm run db:seed
+```
+
+In non-production, running the seed without these variables generates a random
+one-time password and prints it once to the console.
 
 ## Project Structure
 
@@ -188,7 +195,7 @@ railway link
 ### 5. Run Migrations
 
 ```bash
-railway run npx prisma db push
+railway run npx prisma migrate deploy
 railway run npm run db:seed
 ```
 

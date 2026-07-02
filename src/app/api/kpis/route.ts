@@ -1,103 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireSession, requireRole, getClientIp } from '@/lib/api/guard';
+import { writeAudit } from '@/lib/api/audit';
+import { createKpiSchema } from '@/lib/validate';
+import { slugify } from '@/lib/utils';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const GET = handle(async (req: NextRequest) => {
+  await requireSession();
 
-    try {
-      const kpis = await db.kpi.findMany({
-        include: {
-          department: { select: { id: true, name: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+  const sp = req.nextUrl.searchParams;
+  const departmentId = sp.get('departmentId') || undefined;
+  const includeInactive = sp.get('includeInactive') === 'true';
 
-      return NextResponse.json({ kpis });
-    } catch {
-      // Fallback mock data
-      return NextResponse.json({
-        kpis: [
-          {
-            id: '1',
-            name: 'Revenue',
-            description: 'Total revenue',
-            unit: 'USD',
-            departmentId: '1',
-            target: 100000,
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/kpis error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  // Fixed: the old route queried a non-existent `db.kpi` model.
+  const where: Prisma.KpiDefinitionWhereInput = {
+    ...(departmentId && { departmentId }),
+    ...(!includeInactive && { isActive: true }),
+  };
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  const kpis = await db.kpiDefinition.findMany({
+    where,
+    include: {
+      department: { select: { id: true, name: true, slug: true } },
+      snapshots: { orderBy: { recordedAt: 'desc' }, take: 12 },
+    },
+    orderBy: { name: 'asc' },
+  });
 
-    const body = await request.json();
-    const { name, description, unit, target, departmentId, frequency } = body;
+  return NextResponse.json({ kpis });
+});
 
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid KPI name' },
-        { status: 400 }
-      );
-    }
+export const POST = handle(async (req: NextRequest) => {
+  const user = await requireSession();
+  requireRole(user, 'ADMIN', 'EXECUTIVE');
 
-    try {
-      const kpi = await db.kpi.create({
-        data: {
-          name,
-          description: description || '',
-          unit: unit || '',
-          target: target || null,
-          departmentId: departmentId || null,
-          frequency: frequency || 'MONTHLY',
-        },
-        include: {
-          department: { select: { id: true, name: true } },
-        },
-      });
+  const data = await parseBody(req, createKpiSchema);
 
-      return NextResponse.json({ kpi }, { status: 201 });
-    } catch {
-      // Fallback mock response
-      const mockKpi = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        description: description || '',
-        unit: unit || '',
-        target: target || null,
-      };
-      return NextResponse.json({ kpi: mockKpi }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/kpis error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const kpi = await db.kpiDefinition.create({
+    data: {
+      name: data.name,
+      slug: data.slug ?? slugify(data.name),
+      description: data.description ?? null,
+      departmentId: data.departmentId ?? null,
+      roleId: data.roleId ?? null,
+      unit: data.unit,
+      targetValue: data.targetValue,
+      warningThreshold: data.warningThreshold,
+      criticalThreshold: data.criticalThreshold,
+      direction: data.direction,
+      dataSource: data.dataSource,
+      isActive: data.isActive ?? true,
+    },
+    include: { department: { select: { id: true, name: true, slug: true } } },
+  });
+
+  void writeAudit({
+    userId: user.id,
+    action: 'create',
+    entity: 'KpiDefinition',
+    entityId: kpi.id,
+    changes: { name: kpi.name, dataSource: kpi.dataSource },
+    ipAddress: getClientIp(req),
+  });
+
+  return NextResponse.json({ kpi }, { status: 201 });
+});

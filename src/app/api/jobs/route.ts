@@ -1,101 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody, getPagination } from '@/lib/api/http';
+import { requireAdmin } from '@/lib/api/guard';
+import { createJobSchema } from '@/lib/validate';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+const JOB_STATUS = ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'RETRY'] as const;
 
-    const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit') || '50');
+export const GET = handle(async (req: NextRequest) => {
+  await requireAdmin();
 
-    try {
-      const jobs = await db.job.findMany({
-        where: {
-          ...(status && { status }),
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-      });
+  const sp = req.nextUrl.searchParams;
+  const statusRaw = sp.get('status')?.toUpperCase();
+  const p = getPagination(req, 50);
 
-      return NextResponse.json({ jobs });
-    } catch {
-      // Fallback mock data
-      return NextResponse.json({
-        jobs: [
-          {
-            id: '1',
-            type: 'EXPORT',
-            status: 'COMPLETED',
-            progress: 100,
-            createdAt: new Date(),
-            completedAt: new Date(),
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/jobs error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const where: Prisma.JobQueueWhereInput = {
+    ...(statusRaw && (JOB_STATUS as readonly string[]).includes(statusRaw) && {
+      status: statusRaw as (typeof JOB_STATUS)[number],
+    }),
+  };
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  const [jobs, total] = await Promise.all([
+    db.jobQueue.findMany({ where, orderBy: { createdAt: 'desc' }, skip: p.skip, take: p.take }),
+    db.jobQueue.count({ where }),
+  ]);
 
-    const body = await request.json();
-    const { type, payload } = body;
+  return NextResponse.json({
+    jobs,
+    workerActive: false, // honest: the worker tier ships in roadmap Sprint 8
+    pagination: { total, page: p.page, pageSize: p.pageSize, pages: Math.max(1, Math.ceil(total / p.pageSize)) },
+  });
+});
 
-    if (!type || typeof type !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid job type' },
-        { status: 400 }
-      );
-    }
+export const POST = handle(async (req: NextRequest) => {
+  await requireAdmin();
 
-    try {
-      const job = await db.job.create({
-        data: {
-          type,
-          status: 'QUEUED',
-          payload: payload || {},
-        },
-      });
+  const data = await parseBody(req, createJobSchema);
 
-      return NextResponse.json({ job }, { status: 201 });
-    } catch {
-      // Fallback mock response
-      const mockJob = {
-        id: Math.random().toString(36).substr(2, 9),
-        type,
-        status: 'QUEUED',
-        createdAt: new Date(),
-      };
-      return NextResponse.json({ job: mockJob }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/jobs error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const job = await db.jobQueue.create({
+    data: {
+      type: data.type,
+      payload: data.payload as object,
+      priority: data.priority ?? 0,
+      scheduledFor: data.scheduledFor ?? new Date(),
+      maxAttempts: data.maxAttempts ?? 3,
+    },
+  });
+
+  return NextResponse.json(
+    { job, note: 'Job queued. Note: the background worker is not yet enabled (roadmap Sprint 8), so jobs will not process automatically.' },
+    { status: 201 }
+  );
+});

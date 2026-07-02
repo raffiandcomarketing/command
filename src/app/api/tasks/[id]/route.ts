@@ -1,142 +1,106 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import {
+  requireSession,
+  assertCanWrite,
+  assertOwnershipOr,
+  getClientIp,
+  isElevated,
+} from '@/lib/api/guard';
+import { notFound, forbidden } from '@/lib/api/errors';
+import { writeAudit, logActivity } from '@/lib/api/audit';
+import { updateTaskSchema } from '@/lib/validate';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+const taskInclude = {
+  assignee: { select: { id: true, name: true, email: true, avatar: true } },
+  creator: { select: { id: true, name: true } },
+  department: { select: { id: true, name: true, slug: true } },
+  subTasks: { select: { id: true, title: true, status: true } },
+} satisfies Prisma.TaskInclude;
 
-    try {
-      const task = await db.task.findUnique({
-        where: { id: params.id },
-        include: {
-          assignee: { select: { id: true, name: true, email: true } },
-          department: { select: { id: true, name: true } },
-        },
-      });
+export const GET = handle(async (_req: NextRequest, { params }) => {
+  await requireSession();
+  const task = await db.task.findUnique({ where: { id: params.id }, include: taskInclude });
+  if (!task) throw notFound('Task not found');
+  return NextResponse.json({ task });
+});
 
-      if (!task) {
-        return NextResponse.json(
-          { error: 'Task not found' },
-          { status: 404 }
-        );
-      }
+export const PATCH = handle(async (req: NextRequest, { params }) => {
+  const user = await requireSession();
+  assertCanWrite(user);
 
-      return NextResponse.json({ task });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        task: {
-          id: params.id,
-          title: 'Sample Task',
-          description: 'Sample task description',
-          status: 'PENDING',
-          priority: 'MEDIUM',
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`GET /api/tasks/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  const existing = await db.task.findUnique({ where: { id: params.id } });
+  if (!existing) throw notFound('Task not found');
+
+  // Ownership rule (assessment U08): creator, assignee, or elevated roles.
+  assertOwnershipOr(user, [existing.creatorId, existing.assigneeId], 'Only the task creator, assignee, or a manager can modify this task');
+
+  const data = await parseBody(req, updateTaskSchema);
+
+  const completingNow = data.status === 'COMPLETED' && existing.status !== 'COMPLETED';
+
+  const task = await db.task.update({
+    where: { id: params.id },
+    data: {
+      ...(data.title !== undefined && { title: data.title }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.status !== undefined && { status: data.status }),
+      ...(data.priority !== undefined && { priority: data.priority }),
+      ...(data.dueDate !== undefined && { dueDate: data.dueDate }),
+      ...(data.assigneeId !== undefined && { assigneeId: data.assigneeId }),
+      ...(data.departmentId !== undefined && { departmentId: data.departmentId }),
+      ...(data.roleId !== undefined && { roleId: data.roleId }),
+      ...(data.tags !== undefined && { tags: data.tags }),
+      ...(completingNow && { completedAt: new Date() }),
+    },
+    include: taskInclude,
+  });
+
+  void writeAudit({
+    userId: user.id,
+    action: 'update',
+    entity: 'Task',
+    entityId: task.id,
+    changes: data,
+    ipAddress: getClientIp(req),
+  });
+  if (completingNow) {
+    void logActivity({
+      userId: user.id,
+      type: 'task.completed',
+      description: `completed task "${task.title}"`,
+      entityType: 'Task',
+      entityId: task.id,
+      departmentId: task.departmentId,
+    });
   }
-}
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  return NextResponse.json({ task });
+});
 
-    const body = await request.json();
-    const { title, description, status, priority, assigneeId, dueDate } = body;
+export const DELETE = handle(async (req: NextRequest, { params }) => {
+  const user = await requireSession();
+  assertCanWrite(user);
 
-    try {
-      const task = await db.task.update({
-        where: { id: params.id },
-        data: {
-          ...(title && { title }),
-          ...(description !== undefined && { description }),
-          ...(status && { status }),
-          ...(priority && { priority }),
-          ...(assigneeId !== undefined && { assigneeId }),
-          ...(dueDate && { dueDate: new Date(dueDate) }),
-        },
-        include: {
-          assignee: { select: { id: true, name: true, email: true } },
-          department: { select: { id: true, name: true } },
-        },
-      });
+  const existing = await db.task.findUnique({ where: { id: params.id } });
+  if (!existing) throw notFound('Task not found');
 
-      return NextResponse.json({ task });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        task: {
-          id: params.id,
-          title: title || 'Sample Task',
-          description: description || '',
-          status: status || 'PENDING',
-          priority: priority || 'MEDIUM',
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`PATCH /api/tasks/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  if (!isElevated(user) && existing.creatorId !== user.id) {
+    throw forbidden('Only the task creator or a manager can delete this task');
   }
-}
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  await db.task.delete({ where: { id: params.id } });
 
-    try {
-      await db.task.delete({
-        where: { id: params.id },
-      });
+  void writeAudit({
+    userId: user.id,
+    action: 'delete',
+    entity: 'Task',
+    entityId: params.id,
+    changes: { title: existing.title },
+    ipAddress: getClientIp(req),
+  });
 
-      return NextResponse.json({ success: true }, { status: 204 });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({ success: true }, { status: 204 });
-    }
-  } catch (error) {
-    console.error(`DELETE /api/tasks/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ success: true });
+});

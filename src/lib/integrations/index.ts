@@ -307,8 +307,8 @@ export class IntegrationRegistry {
     }
 
     // Create new instance with config
-    const adapterClass = adapter.constructor as typeof BaseIntegrationAdapter;
-    const instance = new adapterClass(integration.config as any);
+    const adapterClass = adapter.constructor as new (config: unknown) => BaseIntegrationAdapter;
+    const instance = new adapterClass(integration.config as unknown);
 
     // Auto-connect if needed
     if (integration.isActive) {

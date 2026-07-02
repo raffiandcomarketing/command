@@ -1,73 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, getPagination } from '@/lib/api/http';
+import { requireSession, requireRole } from '@/lib/api/guard';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+/** Audit trail queries - admin/executive only. */
+export const GET = handle(async (req: NextRequest) => {
+  const user = await requireSession();
+  requireRole(user, 'ADMIN', 'EXECUTIVE');
 
-    const searchParams = request.nextUrl.searchParams;
-    const action = searchParams.get('action');
-    const userId = searchParams.get('userId');
-    const entityType = searchParams.get('entityType');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+  const sp = req.nextUrl.searchParams;
+  const entity = sp.get('entity') || undefined;
+  const entityId = sp.get('entityId') || undefined;
+  const userId = sp.get('userId') || undefined;
+  const action = sp.get('action') || undefined;
+  const p = getPagination(req, 50);
 
-    try {
-      const auditLogs = await db.auditLog.findMany({
-        where: {
-          ...(action && { action }),
-          ...(userId && { userId }),
-          ...(entityType && { entityType }),
-        },
-        include: {
-          user: { select: { id: true, name: true, email: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
-      });
+  const where: Prisma.AuditLogWhereInput = {
+    ...(entity && { entity }),
+    ...(entityId && { entityId }),
+    ...(userId && { userId }),
+    ...(action && { action }),
+  };
 
-      const total = await db.auditLog.count({
-        where: {
-          ...(action && { action }),
-          ...(userId && { userId }),
-          ...(entityType && { entityType }),
-        },
-      });
+  const [logs, total] = await Promise.all([
+    db.auditLog.findMany({
+      where,
+      include: { user: { select: { id: true, name: true, email: true } } },
+      orderBy: { createdAt: 'desc' },
+      skip: p.skip,
+      take: p.take,
+    }),
+    db.auditLog.count({ where }),
+  ]);
 
-      return NextResponse.json({
-        logs: auditLogs,
-        pagination: { total, limit, offset },
-      });
-    } catch {
-      // Fallback mock data
-      return NextResponse.json({
-        logs: [
-          {
-            id: '1',
-            action: 'CREATE',
-            entityType: 'TASK',
-            entityId: 'task1',
-            changes: { title: 'New Task' },
-            createdAt: new Date(),
-          },
-        ],
-        pagination: { total: 1, limit, offset },
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/audit error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({
+    logs,
+    pagination: { total, page: p.page, pageSize: p.pageSize, pages: Math.max(1, Math.ceil(total / p.pageSize)) },
+  });
+});

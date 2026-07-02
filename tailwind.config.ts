@@ -37,7 +37,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        inter: ['var(--font-inter)'],
+        inter: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         serif: ['var(--font-serif)'],
       },
       spacing: {

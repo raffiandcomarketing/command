@@ -90,9 +90,9 @@ export class JobProcessor {
       attempts: job.attempts,
       maxAttempts: job.maxAttempts,
       scheduledFor: job.scheduledFor,
-      startedAt: job.startedAt,
-      completedAt: job.completedAt,
-      error: job.error,
+      startedAt: job.startedAt ?? undefined,
+      completedAt: job.completedAt ?? undefined,
+      error: job.error ?? undefined,
       result: job.result as Record<string, any>,
     };
   }

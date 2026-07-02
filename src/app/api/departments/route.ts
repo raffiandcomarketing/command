@@ -1,124 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireSession, requireAdmin, getClientIp } from '@/lib/api/guard';
+import { writeAudit } from '@/lib/api/audit';
+import { createDepartmentSchema } from '@/lib/validate';
+import { slugify } from '@/lib/utils';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const GET = handle(async (req: NextRequest) => {
+  await requireSession();
 
-    const searchParams = request.nextUrl.searchParams;
-    const search = searchParams.get('search');
-    const isActive = searchParams.get('isActive');
+  const sp = req.nextUrl.searchParams;
+  const search = sp.get('search')?.trim() || undefined;
+  const isActive = sp.get('isActive');
 
-    try {
-      const departments = await db.department.findMany({
-        where: {
-          ...(search && {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
-            ],
-          }),
-          ...(isActive !== null && { isActive: isActive === 'true' }),
-        },
-        include: {
-          roles: { select: { id: true } },
-          members: { select: { id: true } },
-        },
-        orderBy: { name: 'asc' },
-      });
+  // Fixed: old query included a non-existent `members` relation;
+  // the schema relation is `userDepartments`.
+  const where: Prisma.DepartmentWhereInput = {
+    ...(search && {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+    ...(isActive !== null && isActive !== undefined && { isActive: isActive === 'true' }),
+  };
 
-      const formatted = departments.map((dept) => ({
-        ...dept,
-        roleCount: dept.roles.length,
-        memberCount: dept.members.length,
-      }));
+  const departments = await db.department.findMany({
+    where,
+    include: {
+      _count: { select: { roles: true, userDepartments: true, tasks: true } },
+    },
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+  });
 
-      return NextResponse.json({ departments: formatted });
-    } catch {
-      // Fallback mock data
-      return NextResponse.json({
-        departments: [
-          {
-            id: '1',
-            name: 'Sales',
-            description: 'Sales operations and management',
-            isActive: true,
-            roleCount: 3,
-            memberCount: 12,
-          },
-          {
-            id: '2',
-            name: 'Operations',
-            description: 'Operations and logistics',
-            isActive: true,
-            roleCount: 2,
-            memberCount: 8,
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/departments error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({
+    departments: departments.map((d) => ({
+      ...d,
+      roleCount: d._count.roles,
+      memberCount: d._count.userDepartments,
+      taskCount: d._count.tasks,
+    })),
+  });
+});
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+export const POST = handle(async (req: NextRequest) => {
+  const admin = await requireAdmin();
 
-    const body = await request.json();
-    const { name, description, isActive } = body;
+  const data = await parseBody(req, createDepartmentSchema);
 
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid department name' },
-        { status: 400 }
-      );
-    }
+  const department = await db.department.create({
+    data: {
+      name: data.name,
+      slug: data.slug ?? slugify(data.name),
+      description: data.description ?? null,
+      icon: data.icon ?? null,
+      color: data.color ?? null,
+      sortOrder: data.sortOrder ?? 0,
+      isActive: data.isActive ?? true,
+      parentId: data.parentId ?? null,
+    },
+  });
 
-    try {
-      const department = await db.department.create({
-        data: {
-          name,
-          description: description || '',
-          isActive: isActive !== false,
-        },
-      });
+  void writeAudit({
+    userId: admin.id,
+    action: 'create',
+    entity: 'Department',
+    entityId: department.id,
+    changes: { name: department.name, slug: department.slug },
+    ipAddress: getClientIp(req),
+  });
 
-      return NextResponse.json({ department }, { status: 201 });
-    } catch {
-      // Fallback mock response
-      const mockDept = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        description: description || '',
-        isActive: isActive !== false,
-      };
-      return NextResponse.json({ department: mockDept }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/departments error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ department }, { status: 201 });
+});

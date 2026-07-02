@@ -1,129 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireAdmin, getClientIp } from '@/lib/api/guard';
+import { notFound } from '@/lib/api/errors';
+import { writeAudit } from '@/lib/api/audit';
+import { updateIntegrationSchema } from '@/lib/validate';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+export const GET = handle(async (_req: NextRequest, { params }) => {
+  await requireAdmin();
+  const integration = await db.integration.findUnique({
+    where: { id: params.id },
+    include: { webhooks: { select: { id: true, name: true, url: true, isActive: true } } },
+  });
+  if (!integration) throw notFound('Integration not found');
+  return NextResponse.json({
+    integration: { ...integration, config: undefined, status: integration.isActive ? 'configured' : 'inactive', syncAvailable: false },
+  });
+});
 
-    try {
-      const integration = await db.integration.findUnique({
-        where: { id: params.id },
-      });
+export const PATCH = handle(async (req: NextRequest, { params }) => {
+  const admin = await requireAdmin();
 
-      if (!integration) {
-        return NextResponse.json(
-          { error: 'Integration not found' },
-          { status: 404 }
-        );
-      }
+  const data = await parseBody(req, updateIntegrationSchema);
 
-      return NextResponse.json({ integration });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        integration: {
-          id: params.id,
-          type: 'STRIPE',
-          name: 'Stripe',
-          isConnected: true,
-          syncStatus: 'SUCCESS',
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`GET /api/integrations/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const integration = await db.integration.update({
+    where: { id: params.id },
+    data: {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.type !== undefined && { type: data.type }),
+      ...(data.provider !== undefined && { provider: data.provider }),
+      ...(data.config !== undefined && { config: data.config as object }),
+      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      ...(data.departmentId !== undefined && { departmentId: data.departmentId }),
+    },
+  });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  void writeAudit({
+    userId: admin.id,
+    action: 'update',
+    entity: 'Integration',
+    entityId: integration.id,
+    changes: { ...data, config: data.config ? '[updated]' : undefined },
+    ipAddress: getClientIp(req),
+  });
 
-    const body = await request.json();
-    const { name, config, isConnected } = body;
+  return NextResponse.json({
+    integration: { ...integration, config: undefined, status: integration.isActive ? 'configured' : 'inactive', syncAvailable: false },
+  });
+});
 
-    try {
-      const integration = await db.integration.update({
-        where: { id: params.id },
-        data: {
-          ...(name && { name }),
-          ...(config && { config }),
-          ...(isConnected !== undefined && { isConnected }),
-        },
-      });
+export const DELETE = handle(async (req: NextRequest, { params }) => {
+  const admin = await requireAdmin();
 
-      return NextResponse.json({ integration });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        integration: {
-          id: params.id,
-          name: name || 'Stripe',
-          isConnected: isConnected !== false,
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`PATCH /api/integrations/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const integration = await db.integration.findUnique({ where: { id: params.id } });
+  if (!integration) throw notFound('Integration not found');
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  await db.integration.delete({ where: { id: params.id } });
 
-    try {
-      await db.integration.delete({
-        where: { id: params.id },
-      });
+  void writeAudit({
+    userId: admin.id,
+    action: 'delete',
+    entity: 'Integration',
+    entityId: params.id,
+    changes: { name: integration.name },
+    ipAddress: getClientIp(req),
+  });
 
-      return NextResponse.json({ success: true }, { status: 204 });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({ success: true }, { status: 204 });
-    }
-  } catch (error) {
-    console.error(`DELETE /api/integrations/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ success: true });
+});

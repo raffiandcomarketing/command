@@ -1,237 +1,255 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
-import { Avatar } from '@/components/ui/avatar';
-import {
-  Briefcase,
-  Plus,
-  DollarSign,
-  Calendar,
-  User,
-  TrendingUp,
-} from 'lucide-react';
+import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/toast';
+import { api } from '@/lib/client/api';
+import { Briefcase, Plus, TrendingUp, AlertCircle, ArrowRight, ArrowLeft, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Mock deal data
-const mockDeals = {
-  lead: [
-    {
-      id: '1',
-      title: 'Diamond Engagement Ring',
-      contactName: 'Sarah Chen',
-      value: 12500,
-      expectedCloseDate: '2026-04-30',
-      assignee: { name: 'Alex Johnson', avatar: 'AJ' },
-    },
-    {
-      id: '2',
-      title: 'Custom Wedding Set',
-      contactName: 'Michael Park',
-      value: 8200,
-      expectedCloseDate: '2026-05-15',
-      assignee: { name: 'Emma Wilson', avatar: 'EW' },
-    },
-    {
-      id: '3',
-      title: 'Anniversary Necklace',
-      contactName: 'Lisa Wong',
-      value: 3800,
-      expectedCloseDate: '2026-04-20',
-      assignee: { name: 'James Davis', avatar: 'JD' },
-    },
-    {
-      id: '4',
-      title: 'Luxury Watch Collection',
-      contactName: 'David Kim',
-      value: 45000,
-      expectedCloseDate: '2026-06-10',
-      assignee: { name: 'Sarah Mitchell', avatar: 'SM' },
-    },
-    {
-      id: '5',
-      title: 'Pearl Earring Set',
-      contactName: 'Emma Johnson',
-      value: 2100,
-      expectedCloseDate: '2026-04-25',
-      assignee: { name: 'Alex Johnson', avatar: 'AJ' },
-    },
-  ],
-  opportunity: [
-    {
-      id: '6',
-      title: 'Estate Jewellery Purchase',
-      contactName: 'Robert Williams',
-      value: 28000,
-      expectedCloseDate: '2026-05-05',
-      assignee: { name: 'Emma Wilson', avatar: 'EW' },
-    },
-    {
-      id: '7',
-      title: 'Corporate Gift Order',
-      contactName: 'Jennifer Lee',
-      value: 15500,
-      expectedCloseDate: '2026-05-20',
-      assignee: { name: 'James Davis', avatar: 'JD' },
-    },
-    {
-      id: '8',
-      title: 'Bridal Party Set',
-      contactName: 'Amanda Torres',
-      value: 6800,
-      expectedCloseDate: '2026-06-01',
-      assignee: { name: 'Sarah Mitchell', avatar: 'SM' },
-    },
-  ],
-  sale: [
-    {
-      id: '9',
-      title: 'Platinum Wedding Bands',
-      contactName: 'James Morrison',
-      value: 9200,
-      expectedCloseDate: '2026-03-25',
-      assignee: { name: 'Alex Johnson', avatar: 'AJ' },
-    },
-    {
-      id: '10',
-      title: 'Vintage Diamond Brooch',
-      contactName: 'Catherine White',
-      value: 18500,
-      expectedCloseDate: '2026-03-30',
-      assignee: { name: 'Emma Wilson', avatar: 'EW' },
-    },
-  ],
-};
+type Stage = 'LEAD' | 'OPPORTUNITY' | 'SALE';
 
 interface Deal {
   id: string;
   title: string;
-  contactName: string;
   value: number;
-  expectedCloseDate: string;
-  assignee: { name: string; avatar: string };
+  stage: Stage;
+  notes: string | null;
+  expectedCloseDate: string | null;
+  contact: { id: string; name: string } | null;
+  assignee: { id: string; name: string; avatar: string | null } | null;
 }
 
-interface NewDeal {
+const STAGES: Stage[] = ['LEAD', 'OPPORTUNITY', 'SALE'];
+const STAGE_META: Record<Stage, { title: string; accent: string; border: string }> = {
+  LEAD: { title: 'Lead', accent: 'bg-blue-500', border: 'border border-blue-100' },
+  OPPORTUNITY: { title: 'Opportunity', accent: 'bg-amber-500', border: 'border border-amber-100' },
+  SALE: { title: 'Sale', accent: 'bg-emerald-500', border: 'border border-emerald-100' },
+};
+
+const initials = (name?: string | null) =>
+  (name ?? '?')
+    .split(' ')
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+interface DealForm {
+  id?: string;
   title: string;
   contactName: string;
   value: string;
-  stage: 'lead' | 'opportunity' | 'sale';
+  stage: Stage;
   expectedCloseDate: string;
+  notes: string;
 }
 
-const DealCard = ({ deal }: { deal: Deal }) => (
-  <Card className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-    <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-600" />
-    <CardContent className="p-4 space-y-3">
-      <div>
-        <h3 className="font-semibold text-gray-900 text-sm">{deal.title}</h3>
-        <p className="text-xs text-gray-500 mt-1">{deal.contactName}</p>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500">Deal Value</span>
-          <span className="font-semibold text-sm text-[#09203F]">
-            ${deal.value.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500">Close Date</span>
-          <span className="text-xs text-gray-700">
-            {new Date(deal.expectedCloseDate).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-            })}
-          </span>
-        </div>
-      </div>
-
-      <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-[#09203F]/10 flex items-center justify-center text-xs font-medium text-[#09203F]">
-            {deal.assignee.avatar}
-          </div>
-          <span className="text-xs text-gray-600">{deal.assignee.name}</span>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const KanbanColumn = ({
-  title,
-  deals,
-  accentColor,
-  borderColor,
-}: {
-  title: string;
-  deals: Deal[];
-  accentColor: string;
-  borderColor: string;
-}) => {
-  const totalValue = deals.reduce((sum, deal) => sum + deal.value, 0);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className={cn('rounded-lg p-4 bg-gradient-to-br from-white to-gray-50', borderColor)}>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className={cn('text-lg font-semibold text-gray-900 flex items-center gap-2')}>
-            <div className={cn('w-2 h-2 rounded-full', accentColor)} />
-            {title}
-          </h2>
-          <Badge className="bg-gray-200 text-gray-700">{deals.length}</Badge>
-        </div>
-        <div className="text-sm text-gray-600">
-          Total: <span className="font-semibold text-[#09203F]">${totalValue.toLocaleString()}</span>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        {deals.length > 0 ? (
-          deals.map((deal) => <DealCard key={deal.id} deal={deal} />)
-        ) : (
-          <div className="text-center py-8 text-gray-400">
-            <Briefcase className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No deals in this stage</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+const emptyForm: DealForm = { title: '', contactName: '', value: '', stage: 'LEAD', expectedCloseDate: '', notes: '' };
 
 export default function CRMPage() {
-  const [isAddDealOpen, setIsAddDealOpen] = useState(false);
-  const [newDeal, setNewDeal] = useState<NewDeal>({
-    title: '',
-    contactName: '',
-    value: '',
-    stage: 'lead',
-    expectedCloseDate: '',
-  });
+  const toast = useToast();
+  const [deals, setDeals] = useState<Deal[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState<DealForm>(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [busyDealId, setBusyDealId] = useState<string | null>(null);
 
-  const handleAddDeal = () => {
-    // For now, just show a success feedback
-    console.log('New deal:', newDeal);
-    setIsAddDealOpen(false);
-    setNewDeal({
-      title: '',
-      contactName: '',
-      value: '',
-      stage: 'lead',
-      expectedCloseDate: '',
-    });
+  const load = useCallback(async () => {
+    try {
+      setLoadError(null);
+      const res = await api<{ deals: Deal[] }>('/api/crm/deals?pageSize=100');
+      setDeals(res.deals);
+    } catch (e) {
+      setLoadError((e as Error).message);
+      setDeals([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const byStage = useMemo(() => {
+    const groups: Record<Stage, Deal[]> = { LEAD: [], OPPORTUNITY: [], SALE: [] };
+    for (const d of deals ?? []) groups[d.stage]?.push(d);
+    return groups;
+  }, [deals]);
+
+  const totals = useMemo(() => {
+    const t: Record<Stage, number> = { LEAD: 0, OPPORTUNITY: 0, SALE: 0 };
+    for (const s of STAGES) t[s] = byStage[s].reduce((sum, d) => sum + d.value, 0);
+    return t;
+  }, [byStage]);
+
+  const openCreate = () => {
+    setForm(emptyForm);
+    setFormError(null);
+    setModalOpen(true);
   };
 
-  const totalLeadValue = mockDeals.lead.reduce((sum, deal) => sum + deal.value, 0);
-  const totalOpportunityValue = mockDeals.opportunity.reduce((sum, deal) => sum + deal.value, 0);
-  const totalSaleValue = mockDeals.sale.reduce((sum, deal) => sum + deal.value, 0);
-  const totalPipelineValue = totalLeadValue + totalOpportunityValue + totalSaleValue;
+  const openEdit = (deal: Deal) => {
+    setForm({
+      id: deal.id,
+      title: deal.title,
+      contactName: deal.contact?.name ?? '',
+      value: String(deal.value),
+      stage: deal.stage,
+      expectedCloseDate: deal.expectedCloseDate ? deal.expectedCloseDate.slice(0, 10) : '',
+      notes: deal.notes ?? '',
+    });
+    setFormError(null);
+    setModalOpen(true);
+  };
+
+  const submit = async () => {
+    if (!form.title.trim()) {
+      setFormError('Deal title is required');
+      return;
+    }
+    if (!form.id && !form.contactName.trim()) {
+      setFormError('Contact name is required');
+      return;
+    }
+    setSaving(true);
+    setFormError(null);
+    try {
+      if (form.id) {
+        await api(`/api/crm/deals/${form.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            title: form.title.trim(),
+            value: form.value ? Number(form.value) : 0,
+            stage: form.stage,
+            expectedCloseDate: form.expectedCloseDate || null,
+            notes: form.notes.trim() || null,
+          }),
+        });
+        toast.success('Deal updated');
+      } else {
+        await api('/api/crm/deals', {
+          method: 'POST',
+          body: JSON.stringify({
+            title: form.title.trim(),
+            contactName: form.contactName.trim(),
+            value: form.value ? Number(form.value) : 0,
+            stage: form.stage,
+            expectedCloseDate: form.expectedCloseDate || undefined,
+            notes: form.notes.trim() || undefined,
+          }),
+        });
+        toast.success('Deal created');
+      }
+      setModalOpen(false);
+      void load();
+    } catch (e) {
+      setFormError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const moveStage = async (deal: Deal, direction: 1 | -1) => {
+    const idx = STAGES.indexOf(deal.stage) + direction;
+    if (idx < 0 || idx >= STAGES.length) return;
+    const target = STAGES[idx];
+    setBusyDealId(deal.id);
+    try {
+      await api(`/api/crm/deals/${deal.id}`, { method: 'PATCH', body: JSON.stringify({ stage: target }) });
+      toast.success(`Moved "${deal.title}" to ${STAGE_META[target].title}`);
+      void load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusyDealId(null);
+    }
+  };
+
+  const remove = async (deal: Deal) => {
+    if (!window.confirm(`Delete deal "${deal.title}"?`)) return;
+    setBusyDealId(deal.id);
+    try {
+      await api(`/api/crm/deals/${deal.id}`, { method: 'DELETE' });
+      toast.success('Deal deleted');
+      void load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusyDealId(null);
+    }
+  };
+
+  const DealCard = ({ deal }: { deal: Deal }) => (
+    <Card className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+      <div className={cn('h-1 bg-gradient-to-r', deal.stage === 'LEAD' && 'from-blue-500 to-blue-600', deal.stage === 'OPPORTUNITY' && 'from-amber-500 to-amber-600', deal.stage === 'SALE' && 'from-emerald-500 to-emerald-600')} />
+      <CardContent className="p-4 space-y-3">
+        <div className="cursor-pointer" onClick={() => openEdit(deal)}>
+          <h3 className="font-semibold text-gray-900 text-sm">{deal.title}</h3>
+          <p className="text-xs text-gray-500 mt-1">{deal.contact?.name ?? 'No contact'}</p>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">Deal Value</span>
+            <span className="font-semibold text-sm text-[#09203F]">${deal.value.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">Close Date</span>
+            <span className="text-xs text-gray-700">
+              {deal.expectedCloseDate
+                ? new Date(deal.expectedCloseDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '—'}
+            </span>
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-[#09203F]/10 flex items-center justify-center text-xs font-medium text-[#09203F] flex-shrink-0">
+              {initials(deal.assignee?.name)}
+            </div>
+            <span className="text-xs text-gray-600 truncate">{deal.assignee?.name ?? 'Unassigned'}</span>
+          </div>
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <button
+              title="Move back"
+              disabled={deal.stage === 'LEAD' || busyDealId === deal.id}
+              onClick={() => void moveStage(deal, -1)}
+              className="p-1.5 rounded text-gray-400 hover:text-[#09203F] hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              title="Move forward"
+              disabled={deal.stage === 'SALE' || busyDealId === deal.id}
+              onClick={() => void moveStage(deal, 1)}
+              className="p-1.5 rounded text-gray-400 hover:text-[#09203F] hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              title="Delete deal"
+              disabled={busyDealId === deal.id}
+              onClick={() => void remove(deal)}
+              className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-30"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const totalPipelineValue = totals.LEAD + totals.OPPORTUNITY + totals.SALE;
 
   return (
     <div className="space-y-8">
@@ -239,18 +257,26 @@ export default function CRMPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">CRM</h1>
-          <p className="text-gray-500">
-            Manage your sales pipeline and customer relationships
-          </p>
+          <p className="text-gray-500">Manage your sales pipeline and customer relationships</p>
         </div>
-        <Button
-          onClick={() => setIsAddDealOpen(true)}
-          className="bg-[#09203F] hover:bg-[#09203F]/90 text-white"
-        >
+        <Button onClick={openCreate} className="bg-[#09203F] hover:bg-[#09203F]/90 text-white">
           <Plus className="w-4 h-4 mr-2" />
           Add Deal
         </Button>
       </div>
+
+      {loadError && (
+        <Card className="border-red-200 bg-red-50 p-6 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800">Could not load deals</p>
+            <p className="text-xs text-red-600 mt-0.5">{loadError}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => void load()}>
+            Retry
+          </Button>
+        </Card>
+      )}
 
       {/* Pipeline Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -259,9 +285,7 @@ export default function CRMPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Total Pipeline</p>
-                <p className="text-2xl font-bold text-[#09203F]">
-                  ${totalPipelineValue.toLocaleString()}
-                </p>
+                <p className="text-2xl font-bold text-[#09203F]">${totalPipelineValue.toLocaleString()}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-blue-600" />
@@ -269,170 +293,145 @@ export default function CRMPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-white border border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Leads</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  ${totalLeadValue.toLocaleString()}
-                </p>
+        {STAGES.map((s) => (
+          <Card key={s} className="bg-white border border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">{STAGE_META[s].title}s</p>
+                  <p
+                    className={cn(
+                      'text-2xl font-bold',
+                      s === 'LEAD' && 'text-blue-600',
+                      s === 'OPPORTUNITY' && 'text-amber-600',
+                      s === 'SALE' && 'text-emerald-600'
+                    )}
+                  >
+                    ${totals[s].toLocaleString()}
+                  </p>
+                </div>
+                <div className={cn('w-2 h-8 rounded-full', STAGE_META[s].accent)} />
               </div>
-              <div className="w-2 h-8 rounded-full bg-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Opportunities</p>
-                <p className="text-2xl font-bold text-amber-600">
-                  ${totalOpportunityValue.toLocaleString()}
-                </p>
-              </div>
-              <div className="w-2 h-8 rounded-full bg-amber-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Sales</p>
-                <p className="text-2xl font-bold text-emerald-600">
-                  ${totalSaleValue.toLocaleString()}
-                </p>
-              </div>
-              <div className="w-2 h-8 rounded-full bg-emerald-500" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <KanbanColumn
-          title="Lead"
-          deals={mockDeals.lead}
-          accentColor="bg-blue-500"
-          borderColor="border border-blue-100"
-        />
-        <KanbanColumn
-          title="Opportunity"
-          deals={mockDeals.opportunity}
-          accentColor="bg-amber-500"
-          borderColor="border border-amber-100"
-        />
-        <KanbanColumn
-          title="Sale"
-          deals={mockDeals.sale}
-          accentColor="bg-emerald-500"
-          borderColor="border border-emerald-100"
-        />
-      </div>
+      {deals === null && !loadError ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="space-y-3">
+              <Skeleton className="h-20 rounded-lg" />
+              <Skeleton className="h-36 rounded-lg" />
+              <Skeleton className="h-36 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {STAGES.map((stage) => (
+            <div key={stage} className="flex flex-col gap-4">
+              <div className={cn('rounded-lg p-4 bg-gradient-to-br from-white to-gray-50', STAGE_META[stage].border)}>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <div className={cn('w-2 h-2 rounded-full', STAGE_META[stage].accent)} />
+                    {STAGE_META[stage].title}
+                  </h2>
+                  <Badge className="bg-gray-200 text-gray-700">{byStage[stage].length}</Badge>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Total: <span className="font-semibold text-[#09203F]">${totals[stage].toLocaleString()}</span>
+                </div>
+              </div>
 
-      {/* Add Deal Modal */}
+              <div className="flex flex-col gap-3">
+                {byStage[stage].length > 0 ? (
+                  byStage[stage].map((deal) => <DealCard key={deal.id} deal={deal} />)
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    <Briefcase className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No deals in this stage</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add / Edit Deal Modal */}
       <Modal
-        open={isAddDealOpen}
-        onOpenChange={setIsAddDealOpen}
-        title="Add New Deal"
-        description="Create a new sales opportunity"
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setFormError(null);
+        }}
+        title={form.id ? 'Edit Deal' : 'Add New Deal'}
+        description={form.id ? undefined : 'Create a new sales opportunity'}
         size="md"
       >
         <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">
-              Deal Title
-            </label>
-            <Input
-              placeholder="e.g., Diamond Engagement Ring"
-              value={newDeal.title}
-              onChange={(e) =>
-                setNewDeal({ ...newDeal, title: e.target.value })
-              }
-              className="w-full"
-            />
-          </div>
+          {formError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-red-800">{formError}</span>
+            </div>
+          )}
 
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">
-              Contact Name
-            </label>
+          <Input
+            label="Deal Title *"
+            placeholder="e.g., Diamond Engagement Ring"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+
+          {!form.id && (
             <Input
+              label="Contact Name *"
               placeholder="e.g., Sarah Chen"
-              value={newDeal.contactName}
-              onChange={(e) =>
-                setNewDeal({ ...newDeal, contactName: e.target.value })
-              }
-              className="w-full"
+              value={form.contactName}
+              onChange={(e) => setForm({ ...form, contactName: e.target.value })}
+            />
+          )}
+
+          <Input
+            label="Deal Value ($)"
+            type="number"
+            min="0"
+            placeholder="0.00"
+            value={form.value}
+            onChange={(e) => setForm({ ...form, value: e.target.value })}
+          />
+
+          <Select
+            label="Stage"
+            value={form.stage}
+            onChange={(e) => setForm({ ...form, stage: e.target.value as Stage })}
+            options={STAGES.map((s) => ({ value: s, label: STAGE_META[s].title }))}
+          />
+
+          <Input
+            label="Expected Close Date"
+            type="date"
+            value={form.expectedCloseDate}
+            onChange={(e) => setForm({ ...form, expectedCloseDate: e.target.value })}
+          />
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-2">Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-20 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">
-              Deal Value ($)
-            </label>
-            <Input
-              type="number"
-              placeholder="0.00"
-              value={newDeal.value}
-              onChange={(e) =>
-                setNewDeal({ ...newDeal, value: e.target.value })
-              }
-              className="w-full"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">
-              Stage
-            </label>
-            <select
-              value={newDeal.stage}
-              onChange={(e) =>
-                setNewDeal({
-                  ...newDeal,
-                  stage: e.target.value as 'lead' | 'opportunity' | 'sale',
-                })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
-            >
-              <option value="lead">Lead</option>
-              <option value="opportunity">Opportunity</option>
-              <option value="sale">Sale</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">
-              Expected Close Date
-            </label>
-            <Input
-              type="date"
-              value={newDeal.expectedCloseDate}
-              onChange={(e) =>
-                setNewDeal({ ...newDeal, expectedCloseDate: e.target.value })
-              }
-              className="w-full"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-6">
-            <Button
-              onClick={handleAddDeal}
-              className="flex-1 bg-[#09203F] hover:bg-[#09203F]/90 text-white"
-            >
-              Create Deal
+          <div className="flex gap-3 pt-4">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#09203F]/90 text-white">
+              {form.id ? 'Save Changes' : 'Create Deal'}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsAddDealOpen(false)}
-              className="flex-1"
-            >
+            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving} className="flex-1">
               Cancel
             </Button>
           </div>

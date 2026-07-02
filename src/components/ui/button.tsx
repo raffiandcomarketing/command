@@ -10,6 +10,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean
   icon?: React.ReactNode
   iconPosition?: 'left' | 'right'
+  /** Render the (single) child element directly, merging button styling. */
+  asChild?: boolean
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -21,6 +23,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       loading = false,
       icon,
       iconPosition = 'left',
+      asChild = false,
       children,
       disabled,
       ...props
@@ -44,6 +47,20 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       sm: 'px-3 py-1.5 text-sm rounded-md gap-1.5',
       md: 'px-4 py-2 text-base rounded-lg gap-2',
       lg: 'px-6 py-3 text-lg rounded-lg gap-2.5',
+    }
+
+    const composedClassName = cn(
+      'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#09203F] focus:ring-offset-2 focus:ring-offset-white',
+      variantClasses[variant],
+      sizeClasses[size],
+      className
+    )
+
+    if (asChild && React.isValidElement(children)) {
+      const child = children as React.ReactElement<{ className?: string }>
+      return React.cloneElement(child, {
+        className: cn(composedClassName, child.props.className),
+      })
     }
 
     return (

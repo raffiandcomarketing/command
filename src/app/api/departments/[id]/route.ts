@@ -1,152 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireSession, requireAdmin, getClientIp } from '@/lib/api/guard';
+import { notFound, badRequest } from '@/lib/api/errors';
+import { writeAudit } from '@/lib/api/audit';
+import { updateDepartmentSchema } from '@/lib/validate';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const GET = handle(async (_req: NextRequest, { params }) => {
+  await requireSession();
+  const department = await db.department.findUnique({
+    where: { id: params.id },
+    include: {
+      roles: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } },
+      _count: { select: { userDepartments: true, tasks: true } },
+    },
+  });
+  if (!department) throw notFound('Department not found');
+  return NextResponse.json({ department });
+});
 
-    try {
-      const department = await db.department.findUnique({
-        where: { id: params.id },
-        include: {
-          roles: true,
-          members: {
-            include: { user: { select: { name: true, email: true } } },
-          },
-        },
-      });
+export const PATCH = handle(async (req: NextRequest, { params }) => {
+  const admin = await requireAdmin();
 
-      if (!department) {
-        return NextResponse.json(
-          { error: 'Department not found' },
-          { status: 404 }
-        );
-      }
+  const data = await parseBody(req, updateDepartmentSchema);
 
-      return NextResponse.json({
-        department: {
-          ...department,
-          roleCount: department.roles.length,
-          memberCount: department.members.length,
-        },
-      });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        department: {
-          id: params.id,
-          name: 'Sample Department',
-          description: 'Sample department description',
-          isActive: true,
-          roleCount: 2,
-          memberCount: 5,
-          roles: [],
-          members: [],
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`GET /api/departments/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  const department = await db.department.update({
+    where: { id: params.id },
+    data,
+  });
+
+  void writeAudit({
+    userId: admin.id,
+    action: 'update',
+    entity: 'Department',
+    entityId: department.id,
+    changes: data,
+    ipAddress: getClientIp(req),
+  });
+
+  return NextResponse.json({ department });
+});
+
+export const DELETE = handle(async (req: NextRequest, { params }) => {
+  const admin = await requireAdmin();
+
+  const dept = await db.department.findUnique({
+    where: { id: params.id },
+    include: { _count: { select: { userDepartments: true, tasks: true } } },
+  });
+  if (!dept) throw notFound('Department not found');
+  if (dept._count.userDepartments > 0) {
+    throw badRequest('This department has members. Reassign them before deleting.');
   }
-}
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
+  await db.department.delete({ where: { id: params.id } });
 
-    const body = await request.json();
-    const { name, description, isActive } = body;
+  void writeAudit({
+    userId: admin.id,
+    action: 'delete',
+    entity: 'Department',
+    entityId: params.id,
+    changes: { name: dept.name },
+    ipAddress: getClientIp(req),
+  });
 
-    try {
-      const department = await db.department.update({
-        where: { id: params.id },
-        data: {
-          ...(name && { name }),
-          ...(description !== undefined && { description }),
-          ...(isActive !== undefined && { isActive }),
-        },
-        include: { roles: true, members: true },
-      });
-
-      return NextResponse.json({
-        department: {
-          ...department,
-          roleCount: department.roles.length,
-          memberCount: department.members.length,
-        },
-      });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({
-        department: {
-          id: params.id,
-          name: name || 'Sample Department',
-          description: description || '',
-          isActive: isActive !== false,
-        },
-      });
-    }
-  } catch (error) {
-    console.error(`PATCH /api/departments/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - admin only' },
-        { status: 403 }
-      );
-    }
-
-    try {
-      await db.department.delete({
-        where: { id: params.id },
-      });
-
-      return NextResponse.json({ success: true }, { status: 204 });
-    } catch {
-      // Fallback mock response
-      return NextResponse.json({ success: true }, { status: 204 });
-    }
-  } catch (error) {
-    console.error(`DELETE /api/departments/${params.id} error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ success: true });
+});

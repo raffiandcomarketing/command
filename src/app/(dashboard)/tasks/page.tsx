@@ -1,296 +1,275 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Search,
-  Plus,
-  CheckSquare,
-  LayoutGrid,
-  List,
-  Filter,
-  Calendar,
-  User,
-} from 'lucide-react';
+import { Modal } from '@/components/ui/modal';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/toast';
+import { api } from '@/lib/client/api';
+import { formatDate } from '@/lib/utils';
+import { Search, Plus, CheckSquare, LayoutGrid, List, Filter, AlertCircle, Trash2, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Mock task data
-const mockTasks = [
-  {
-    id: '1',
-    title: 'Review Q1 Marketing Budget',
-    status: 'pending',
-    priority: 'high',
-    assignee: 'Sarah Mitchell',
-    department: 'Marketing',
-    dueDate: '2026-04-02',
-    description: 'Complete quarterly budget review and approval',
-  },
-  {
-    id: '2',
-    title: 'Update Inventory System',
-    status: 'in-progress',
-    priority: 'urgent',
-    assignee: 'Marcus Chen',
-    department: 'IT Systems',
-    dueDate: '2026-03-31',
-    description: 'Implement new inventory tracking features',
-  },
-  {
-    id: '3',
-    title: 'Approve Campaign Creative',
-    status: 'review',
-    priority: 'high',
-    assignee: 'Elena Rodriguez',
-    department: 'Marketing',
-    dueDate: '2026-04-05',
-    description: 'Review and approve all campaign creative assets',
-  },
-  {
-    id: '4',
-    title: 'Client Onboarding Package',
-    status: 'pending',
-    priority: 'medium',
-    assignee: 'James Wilson',
-    department: 'Client Experience',
-    dueDate: '2026-04-08',
-    description: 'Prepare and send welcome package to new VIP client',
-  },
-  {
-    id: '5',
-    title: 'Repair Assessment Report',
-    status: 'in-progress',
-    priority: 'high',
-    assignee: 'Yuki Tanaka',
-    department: 'Repairs/Service',
-    dueDate: '2026-04-01',
-    description: 'Complete damage assessment on luxury watch repairs',
-  },
-  {
-    id: '6',
-    title: 'Social Media Content Calendar',
-    status: 'completed',
-    priority: 'medium',
-    assignee: 'Sarah Mitchell',
-    department: 'Marketing',
-    dueDate: '2026-03-28',
-    description: 'Finalize April social media content plan',
-  },
-  {
-    id: '7',
-    title: 'Financial Statement Audit',
-    status: 'in-progress',
-    priority: 'critical',
-    assignee: 'David Zhang',
-    department: 'Finance/Accounting',
-    dueDate: '2026-04-15',
-    description: 'Q1 financial audit preparation and documentation',
-  },
-  {
-    id: '8',
-    title: 'Employee Training Program',
-    status: 'pending',
-    priority: 'medium',
-    assignee: 'Lisa Anderson',
-    department: 'Human Resources',
-    dueDate: '2026-04-12',
-    description: 'Design and schedule new hire training curriculum',
-  },
-  {
-    id: '9',
-    title: 'Vendor Contract Negotiation',
-    status: 'review',
-    priority: 'high',
-    assignee: 'Robert Johnson',
-    department: 'Purchasing/Procurement',
-    dueDate: '2026-04-03',
-    description: 'Negotiate terms for new supplier agreement',
-  },
-  {
-    id: '10',
-    title: 'Store Display Redesign',
-    status: 'pending',
-    priority: 'medium',
-    assignee: 'Maria Garcia',
-    department: 'Visual Merchandising',
-    dueDate: '2026-04-10',
-    description: 'Create and implement new window display design',
-  },
-  {
-    id: '11',
-    title: 'Customer Complaint Resolution',
-    status: 'in-progress',
-    priority: 'urgent',
-    assignee: 'Thomas Mitchell',
-    department: 'Customer Care',
-    dueDate: '2026-03-31',
-    description: 'Address high-value customer complaint',
-  },
-  {
-    id: '12',
-    title: 'Inventory Stock Count',
-    status: 'pending',
-    priority: 'medium',
-    assignee: 'Susan Lee',
-    department: 'Inventory/Merchandising',
-    dueDate: '2026-04-07',
-    description: 'Conduct physical inventory count and reconciliation',
-  },
-  {
-    id: '13',
-    title: 'Email Marketing Campaign',
-    status: 'review',
-    priority: 'medium',
-    assignee: 'Alex Turner',
-    department: 'Marketing',
-    dueDate: '2026-04-02',
-    description: 'Create and test email marketing campaign',
-  },
-  {
-    id: '14',
-    title: 'Logistics Route Optimization',
-    status: 'in-progress',
-    priority: 'high',
-    assignee: 'Patricia White',
-    department: 'Logistics/Shipping',
-    dueDate: '2026-04-06',
-    description: 'Optimize shipping routes for cost efficiency',
-  },
-  {
-    id: '15',
-    title: 'System Security Audit',
-    status: 'pending',
-    priority: 'critical',
-    assignee: 'Kevin Park',
-    department: 'IT Systems',
-    dueDate: '2026-04-20',
-    description: 'Conduct comprehensive security audit and penetration testing',
-  },
-];
+interface TaskRow {
+  id: string;
+  title: string;
+  description: string | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED' | 'CANCELLED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL';
+  dueDate: string | null;
+  assignee: { id: string; name: string } | null;
+  creator: { id: string; name: string } | null;
+  department: { id: string; name: string } | null;
+}
 
-const TaskCard = ({ task, viewMode }: { task: (typeof mockTasks)[0]; viewMode: string }) => {
-  const statusColors = {
-    pending: 'bg-gray-500/10 text-gray-700 border-gray-200',
-    'in-progress': 'bg-blue-500/10 text-blue-700 border-blue-200',
-    review: 'bg-purple-500/10 text-purple-700 border-purple-200',
-    completed: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
-  };
+interface Pagination {
+  total: number;
+  page: number;
+  pageSize: number;
+  pages: number;
+}
 
-  const priorityColors = {
-    low: 'bg-blue-500/10 text-blue-700 border-blue-200',
-    medium: 'bg-yellow-500/10 text-yellow-700 border-yellow-200',
-    high: 'bg-red-500/10 text-red-700 border-red-200',
-    urgent: 'bg-red-600/10 text-red-700 border-red-200',
-    critical: 'bg-red-700/10 text-red-800 border-red-200',
-  };
+const STATUSES = ['PENDING', 'IN_PROGRESS', 'REVIEW', 'COMPLETED', 'CANCELLED'] as const;
+const PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL'] as const;
 
-  if (viewMode === 'grid') {
-    return (
-      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-[#09203F]/20 transition-all cursor-pointer">
-        <div className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 flex-1">{task.title}</h3>
-            <Badge variant="outline" className={statusColors[task.status]}>
-              {task.status}
-            </Badge>
-          </div>
+const statusColors: Record<string, string> = {
+  PENDING: 'bg-gray-500/10 text-gray-700 border-gray-200',
+  IN_PROGRESS: 'bg-blue-500/10 text-blue-700 border-blue-200',
+  REVIEW: 'bg-purple-500/10 text-purple-700 border-purple-200',
+  COMPLETED: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
+  CANCELLED: 'bg-gray-400/10 text-gray-500 border-gray-200',
+};
 
-          <p className="text-sm text-gray-500 mb-4">{task.description}</p>
+const priorityColors: Record<string, string> = {
+  LOW: 'bg-blue-500/10 text-blue-700 border-blue-200',
+  MEDIUM: 'bg-yellow-500/10 text-yellow-700 border-yellow-200',
+  HIGH: 'bg-red-500/10 text-red-700 border-red-200',
+  URGENT: 'bg-red-600/10 text-red-700 border-red-200',
+  CRITICAL: 'bg-red-700/10 text-red-800 border-red-200',
+};
 
-          <div className="space-y-3 pt-4 border-t border-gray-200">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Assignee</span>
-              <span className="text-gray-900 font-medium">{task.assignee}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Department</span>
-              <span className="text-gray-900 font-medium">{task.department}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Due Date</span>
-              <span className="text-gray-900 font-medium">{task.dueDate}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Priority</span>
-              <Badge variant="outline" className={priorityColors[task.priority]}>
-                {task.priority}
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </Card>
-    );
-  }
+const label = (s: string) => s.replace(/_/g, ' ').toLowerCase();
 
-  return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
-      <div className="flex-1">
-        <div className="flex items-center gap-3">
-          <CheckSquare className="w-5 h-5 text-[#09203F] flex-shrink-0" />
-          <div>
-            <p className="font-medium text-gray-900">{task.title}</p>
-            <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-4 ml-4">
-        <Badge variant="outline" className={statusColors[task.status]}>
-          {task.status}
-        </Badge>
-        <Badge variant="outline" className={priorityColors[task.priority]}>
-          {task.priority}
-        </Badge>
-        <div className="w-32 text-right">
-          <p className="text-sm text-gray-500">{task.assignee}</p>
-        </div>
-        <div className="w-24 text-right">
-          <p className="text-sm text-gray-500">{task.dueDate}</p>
-        </div>
-      </div>
-    </div>
-  );
+interface TaskFormState {
+  id?: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  dueDate: string;
+  assigneeId: string;
+  departmentId: string;
+}
+
+const emptyForm: TaskFormState = {
+  title: '',
+  description: '',
+  status: 'PENDING',
+  priority: 'MEDIUM',
+  dueDate: '',
+  assigneeId: '',
+  departmentId: '',
 };
 
 export default function TasksPage() {
+  const { data: session } = useSession();
+  const toast = useToast();
+
+  const [tasks, setTasks] = useState<TaskRow[] | null>(null);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
-  const [departmentFilter, setDepartmentFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
+  const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
 
-  const statuses = useMemo(() => {
-    return ['pending', 'in-progress', 'review', 'completed'];
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
+  const [users, setUsers] = useState<Array<{ id: string; name: string }>>([]);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState<TaskFormState>(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const load = useCallback(async () => {
+    try {
+      setLoadError(null);
+      const params = new URLSearchParams({ page: String(page), pageSize: '20' });
+      if (statusFilter) params.set('status', statusFilter);
+      if (priorityFilter) params.set('priority', priorityFilter);
+      if (departmentFilter) params.set('departmentId', departmentFilter);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+      const res = await api<{ tasks: TaskRow[]; pagination: Pagination }>(`/api/tasks?${params}`);
+      setTasks(res.tasks);
+      setPagination(res.pagination);
+    } catch (e) {
+      setLoadError((e as Error).message);
+      setTasks([]);
+    }
+  }, [page, statusFilter, priorityFilter, departmentFilter, debouncedSearch]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useEffect(() => {
+    api<{ departments: Array<{ id: string; name: string }> }>('/api/departments')
+      .then((r) => setDepartments(r.departments))
+      .catch(() => undefined);
+    api<{ users: Array<{ id: string; name: string }> }>('/api/users/options')
+      .then((r) => setUsers(r.users))
+      .catch(() => undefined);
   }, []);
 
-  const priorities = useMemo(() => {
-    return ['low', 'medium', 'high', 'urgent', 'critical'];
-  }, []);
+  const openCreate = () => {
+    setForm({ ...emptyForm, assigneeId: session?.user?.id ?? '' });
+    setFormError(null);
+    setModalOpen(true);
+  };
 
-  const departments = useMemo(() => {
-    return [...new Set(mockTasks.map((t) => t.department))];
-  }, []);
-
-  const filtered = useMemo(() => {
-    return mockTasks.filter((task) => {
-      const matchesSearch = task.title
-        .toLowerCase()
-        .includes(search.toLowerCase()) ||
-        task.description
-          .toLowerCase()
-          .includes(search.toLowerCase());
-
-      const matchesStatus =
-        statusFilter.length === 0 || statusFilter.includes(task.status);
-      const matchesPriority =
-        priorityFilter.length === 0 || priorityFilter.includes(task.priority);
-      const matchesDept =
-        departmentFilter.length === 0 || departmentFilter.includes(task.department);
-
-      return matchesSearch && matchesStatus && matchesPriority && matchesDept;
+  const openEdit = (task: TaskRow) => {
+    setForm({
+      id: task.id,
+      title: task.title,
+      description: task.description ?? '',
+      status: task.status,
+      priority: task.priority,
+      dueDate: task.dueDate ? task.dueDate.slice(0, 10) : '',
+      assigneeId: task.assignee?.id ?? '',
+      departmentId: task.department?.id ?? '',
     });
-  }, [search, statusFilter, priorityFilter, departmentFilter]);
+    setFormError(null);
+    setModalOpen(true);
+  };
+
+  const submit = async () => {
+    if (!form.title.trim()) {
+      setFormError('Task title is required');
+      return;
+    }
+    setSaving(true);
+    setFormError(null);
+    const payload = {
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      status: form.status,
+      priority: form.priority,
+      dueDate: form.dueDate || null,
+      assigneeId: form.assigneeId || null,
+      departmentId: form.departmentId || null,
+    };
+    try {
+      if (form.id) {
+        await api(`/api/tasks/${form.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+        toast.success('Task updated');
+      } else {
+        await api('/api/tasks', { method: 'POST', body: JSON.stringify(payload) });
+        toast.success('Task created');
+      }
+      setModalOpen(false);
+      void load();
+    } catch (e) {
+      setFormError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const complete = async (task: TaskRow) => {
+    setBusyTaskId(task.id);
+    try {
+      await api(`/api/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'COMPLETED' }) });
+      toast.success(`Completed "${task.title}"`);
+      void load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusyTaskId(null);
+    }
+  };
+
+  const remove = async (task: TaskRow) => {
+    if (!window.confirm(`Delete task "${task.title}"? This cannot be undone.`)) return;
+    setBusyTaskId(task.id);
+    try {
+      await api(`/api/tasks/${task.id}`, { method: 'DELETE' });
+      toast.success('Task deleted');
+      void load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusyTaskId(null);
+    }
+  };
+
+  const FilterChip = ({
+    active,
+    onClick,
+    children,
+  }: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+  }) => (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={onClick}
+      className={cn(
+        active
+          ? 'bg-[#09203F] text-white border-[#09203F] hover:bg-[#0a2651]'
+          : 'bg-white border-gray-200 text-gray-700 hover:border-[#09203F]/50'
+      )}
+    >
+      {children}
+    </Button>
+  );
+
+  const TaskActions = ({ task }: { task: TaskRow }) => (
+    <div className="flex items-center gap-1">
+      {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && (
+        <Button
+          size="sm"
+          variant="ghost"
+          title="Mark completed"
+          disabled={busyTaskId === task.id}
+          onClick={(e) => {
+            e.stopPropagation();
+            void complete(task);
+          }}
+        >
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        </Button>
+      )}
+      <Button
+        size="sm"
+        variant="ghost"
+        title="Delete task"
+        disabled={busyTaskId === task.id}
+        onClick={(e) => {
+          e.stopPropagation();
+          void remove(task);
+        }}
+      >
+        <Trash2 className="w-4 h-4 text-red-500" />
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-8">
@@ -298,11 +277,9 @@ export default function TasksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>
-          <p className="text-gray-500">
-            Track and manage tasks across your organization.
-          </p>
+          <p className="text-gray-500">Track and manage tasks across your organization.</p>
         </div>
-        <Button className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium">
+        <Button onClick={openCreate} className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium">
           <Plus className="w-4 h-4 mr-2" />
           Create Task
         </Button>
@@ -324,27 +301,17 @@ export default function TasksPage() {
         <div className="flex gap-2 bg-white border border-gray-200 rounded-lg p-1">
           <Button
             size="sm"
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            variant="ghost"
             onClick={() => setViewMode('list')}
-            className={cn(
-              'px-3',
-              viewMode === 'list'
-                ? 'bg-gray-100 text-gray-900'
-                : 'bg-transparent text-gray-400 hover:text-gray-700'
-            )}
+            className={cn('px-3', viewMode === 'list' ? 'bg-gray-100 text-gray-900' : 'bg-transparent text-gray-400 hover:text-gray-700')}
           >
             <List className="w-4 h-4" />
           </Button>
           <Button
             size="sm"
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
+            variant="ghost"
             onClick={() => setViewMode('grid')}
-            className={cn(
-              'px-3',
-              viewMode === 'grid'
-                ? 'bg-gray-100 text-gray-900'
-                : 'bg-transparent text-gray-400 hover:text-gray-700'
-            )}
+            className={cn('px-3', viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'bg-transparent text-gray-400 hover:text-gray-700')}
           >
             <LayoutGrid className="w-4 h-4" />
           </Button>
@@ -354,125 +321,294 @@ export default function TasksPage() {
       {/* Filters */}
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
             <Filter className="w-4 h-4" />
             Status
           </label>
           <div className="flex flex-wrap gap-2">
-            {statuses.map((status) => (
-              <Button
+            {STATUSES.map((status) => (
+              <FilterChip
                 key={status}
-                size="sm"
-                variant={statusFilter.includes(status) ? 'default' : 'outline'}
+                active={statusFilter === status}
                 onClick={() => {
-                  setStatusFilter((prev) =>
-                    prev.includes(status)
-                      ? prev.filter((s) => s !== status)
-                      : [...prev, status]
-                  );
+                  setPage(1);
+                  setStatusFilter(statusFilter === status ? null : status);
                 }}
-                className={cn(
-                  statusFilter.includes(status)
-                    ? 'bg-[#09203F] text-white'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-[#09203F]/50'
-                )}
               >
-                {status}
-              </Button>
+                {label(status)}
+              </FilterChip>
             ))}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
             <Filter className="w-4 h-4" />
             Priority
           </label>
           <div className="flex flex-wrap gap-2">
-            {priorities.map((priority) => (
-              <Button
+            {PRIORITIES.map((priority) => (
+              <FilterChip
                 key={priority}
-                size="sm"
-                variant={priorityFilter.includes(priority) ? 'default' : 'outline'}
+                active={priorityFilter === priority}
                 onClick={() => {
-                  setPriorityFilter((prev) =>
-                    prev.includes(priority)
-                      ? prev.filter((p) => p !== priority)
-                      : [...prev, priority]
-                  );
+                  setPage(1);
+                  setPriorityFilter(priorityFilter === priority ? null : priority);
                 }}
-                className={cn(
-                  priorityFilter.includes(priority)
-                    ? 'bg-[#09203F] text-white'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-[#09203F]/50'
-                )}
               >
-                {priority}
-              </Button>
+                {label(priority)}
+              </FilterChip>
             ))}
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-            <Filter className="w-4 h-4" />
-            Department
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {departments.map((dept) => (
-              <Button
-                key={dept}
-                size="sm"
-                variant={departmentFilter.includes(dept) ? 'default' : 'outline'}
-                onClick={() => {
-                  setDepartmentFilter((prev) =>
-                    prev.includes(dept)
-                      ? prev.filter((d) => d !== dept)
-                      : [...prev, dept]
-                  );
-                }}
-                className={cn(
-                  departmentFilter.includes(dept)
-                    ? 'bg-[#09203F] text-white'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-[#09203F]/50'
-                )}
-              >
-                {dept}
-              </Button>
-            ))}
+        {departments.length > 0 && (
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Department
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {departments.map((dept) => (
+                <FilterChip
+                  key={dept.id}
+                  active={departmentFilter === dept.id}
+                  onClick={() => {
+                    setPage(1);
+                    setDepartmentFilter(departmentFilter === dept.id ? null : dept.id);
+                  }}
+                >
+                  {dept.name}
+                </FilterChip>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Tasks */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((task) => (
-            <TaskCard key={task.id} task={task} viewMode="grid" />
-          ))}
-        </div>
-      ) : (
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900">
-              All Tasks ({filtered.length})
-            </h2>
+      {/* Error state */}
+      {loadError && (
+        <Card className="border-red-200 bg-red-50 p-6 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800">Could not load tasks</p>
+            <p className="text-xs text-red-600 mt-0.5">{loadError}</p>
           </div>
-          <div>
-            {filtered.map((task) => (
-              <TaskCard key={task.id} task={task} viewMode="list" />
-            ))}
-          </div>
+          <Button variant="outline" size="sm" onClick={() => void load()}>
+            Retry
+          </Button>
         </Card>
       )}
 
-      {filtered.length === 0 && (
+      {/* Loading state */}
+      {tasks === null && !loadError && (
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-xl" />
+          ))}
+        </div>
+      )}
+
+      {/* Tasks */}
+      {tasks !== null && tasks.length > 0 && (
+        <>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {tasks.map((task) => (
+                <Card
+                  key={task.id}
+                  onClick={() => openEdit(task)}
+                  className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-[#09203F]/20 transition-all cursor-pointer"
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4 gap-2">
+                      <h3 className="text-lg font-semibold text-gray-900 flex-1">{task.title}</h3>
+                      <Badge variant="outline" className={statusColors[task.status]}>
+                        {label(task.status)}
+                      </Badge>
+                    </div>
+
+                    {task.description && <p className="text-sm text-gray-500 mb-4 line-clamp-2">{task.description}</p>}
+
+                    <div className="space-y-3 pt-4 border-t border-gray-200">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Assignee</span>
+                        <span className="text-gray-900 font-medium">{task.assignee?.name ?? 'Unassigned'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Department</span>
+                        <span className="text-gray-900 font-medium">{task.department?.name ?? '—'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Due Date</span>
+                        <span className="text-gray-900 font-medium">{task.dueDate ? formatDate(task.dueDate) : '—'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Priority</span>
+                        <Badge variant="outline" className={priorityColors[task.priority]}>
+                          {label(task.priority)}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="pt-3 flex justify-end">
+                      <TaskActions task={task} />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
+              <div className="border-b border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900">All Tasks ({pagination?.total ?? tasks.length})</h2>
+              </div>
+              <div>
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    onClick={() => openEdit(task)}
+                    className="flex items-center justify-between p-4 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3">
+                        <CheckSquare className="w-5 h-5 text-[#09203F] flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{task.title}</p>
+                          {task.description && <p className="text-sm text-gray-500 mt-1 truncate">{task.description}</p>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 ml-4 flex-shrink-0">
+                      <Badge variant="outline" className={statusColors[task.status]}>
+                        {label(task.status)}
+                      </Badge>
+                      <Badge variant="outline" className={priorityColors[task.priority]}>
+                        {label(task.priority)}
+                      </Badge>
+                      <div className="w-32 text-right hidden md:block">
+                        <p className="text-sm text-gray-500 truncate">{task.assignee?.name ?? 'Unassigned'}</p>
+                      </div>
+                      <div className="w-24 text-right hidden md:block">
+                        <p className="text-sm text-gray-500">{task.dueDate ? formatDate(task.dueDate) : '—'}</p>
+                      </div>
+                      <TaskActions task={task} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Pagination */}
+          {pagination && pagination.pages > 1 && (
+            <div className="flex items-center justify-center gap-3">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+                Previous
+              </Button>
+              <span className="text-sm text-gray-500">
+                Page {pagination.page} of {pagination.pages}
+              </span>
+              <Button variant="outline" size="sm" disabled={page >= pagination.pages} onClick={() => setPage((p) => p + 1)}>
+                Next
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Empty state */}
+      {tasks !== null && tasks.length === 0 && !loadError && (
         <div className="text-center py-12">
           <CheckSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 mb-2">No tasks found</p>
-          <p className="text-gray-400 text-sm">Try adjusting your filters or create a new task</p>
+          <p className="text-gray-400 text-sm mb-4">
+            {debouncedSearch || statusFilter || priorityFilter || departmentFilter
+              ? 'Try adjusting your filters, or create a new task.'
+              : 'Create your first task to get started.'}
+          </p>
+          <Button onClick={openCreate} className="bg-[#09203F] hover:bg-[#0a2651] text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            Create Task
+          </Button>
         </div>
       )}
+
+      {/* Create / Edit Modal */}
+      <Modal
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setFormError(null);
+        }}
+        title={form.id ? 'Edit Task' : 'Create New Task'}
+        size="lg"
+      >
+        <div className="space-y-5">
+          {formError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-red-800">{formError}</span>
+            </div>
+          )}
+
+          <Input
+            label="Task Title *"
+            placeholder="Enter task title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 min-h-20 resize-none focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Status"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+              options={STATUSES.map((s) => ({ value: s, label: label(s) }))}
+            />
+            <Select
+              label="Priority"
+              value={form.priority}
+              onChange={(e) => setForm({ ...form, priority: e.target.value })}
+              options={PRIORITIES.map((p) => ({ value: p, label: label(p) }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Assignee"
+              value={form.assigneeId}
+              onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}
+              options={[{ value: '', label: 'Unassigned' }, ...users.map((u) => ({ value: u.id, label: u.name }))]}
+            />
+            <Select
+              label="Department"
+              value={form.departmentId}
+              onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+              options={[{ value: '', label: 'None' }, ...departments.map((d) => ({ value: d.id, label: d.name }))]}
+            />
+          </div>
+
+          <Input label="Due Date" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+
+          <div className="flex gap-3 pt-2">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-11">
+              {form.id ? 'Save Changes' : 'Create Task'}
+            </Button>
+            <Button onClick={() => setModalOpen(false)} disabled={saving} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium h-11">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -17,6 +17,14 @@ interface SidebarProps {
   onToggle?: () => void;
 }
 
+interface NavChildItem {
+  label: string;
+  href: string;
+  icon: string;
+  badge?: number;
+  children?: NavChildItem[];
+}
+
 export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -72,19 +80,19 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
     label,
     href,
     icon,
-    children,
+    childItems,
     badge,
     depth = 0,
   }: {
     label: string;
     href: string;
     icon: string;
-    children?: any[];
+    childItems?: NavChildItem[];
     badge?: number;
     depth?: number;
   }) => {
     const IconComponent = getIcon(icon);
-    const hasChildren = children && children.length > 0;
+    const hasChildren = childItems && childItems.length > 0;
     const active = isActive(href);
     const isExpanded = expandedItems.has(href);
 
@@ -139,7 +147,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
 
           {!isCollapsed && isExpanded && (
             <div className="ml-4 mt-1 space-y-1 border-l border-gray-200 pl-2">
-              {children.map((child) => (
+              {childItems!.map((child) => (
                 <NavItem
                   key={child.href}
                   {...child}
@@ -217,7 +225,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
                     label={item.label}
                     href={item.href}
                     icon={item.icon}
-                    children={item.children}
+                    childItems={item.children}
                     badge={item.badge}
                     depth={0}
                   />
@@ -227,7 +235,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
                   label={section.label}
                   href={section.href}
                   icon={section.icon}
-                  children={section.children}
+                  childItems={section.children}
                   badge={section.badge}
                   depth={0}
                 />

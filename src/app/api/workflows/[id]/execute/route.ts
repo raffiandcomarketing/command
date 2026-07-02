@@ -1,67 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { handle, parseBody } from '@/lib/api/http';
+import { requireSession, assertCanWrite, getClientIp } from '@/lib/api/guard';
+import { notFound, badRequest } from '@/lib/api/errors';
+import { writeAudit, logActivity } from '@/lib/api/audit';
+import { executeWorkflowSchema } from '@/lib/validate';
+import { executeWorkflow } from '@/lib/workflows/runner';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const POST = handle(async (req: NextRequest, { params }) => {
+  const user = await requireSession();
+  assertCanWrite(user);
 
-    const body = await request.json();
-    const { payload } = body;
+  const workflow = await db.workflow.findUnique({ where: { id: params.id } });
+  if (!workflow) throw notFound('Workflow not found');
+  if (!workflow.isActive) throw badRequest('This workflow is inactive');
+  if (workflow.isTemplate) throw badRequest('Templates cannot be executed directly - create a workflow from it first');
 
-    try {
-      const workflow = await db.workflow.findUnique({
-        where: { id: params.id },
-      });
+  const { context } = await parseBody(req, executeWorkflowSchema);
 
-      if (!workflow) {
-        return NextResponse.json(
-          { error: 'Workflow not found' },
-          { status: 404 }
-        );
-      }
+  const instance = await executeWorkflow(params.id, user.id, context);
 
-      const instance = await db.workflowInstance.create({
-        data: {
-          workflowId: params.id,
-          status: 'RUNNING',
-          startedAt: new Date(),
-          payload: payload || {},
-        },
-      });
+  void writeAudit({
+    userId: user.id,
+    action: 'execute',
+    entity: 'Workflow',
+    entityId: params.id,
+    changes: { instanceId: instance.id, status: instance.status },
+    ipAddress: getClientIp(req),
+  });
+  void logActivity({
+    userId: user.id,
+    type: 'workflow.executed',
+    description: `ran workflow "${workflow.name}" (${instance.status.toLowerCase()})`,
+    entityType: 'WorkflowInstance',
+    entityId: instance.id,
+    departmentId: workflow.departmentId,
+  });
 
-      return NextResponse.json(
-        { instance, message: 'Workflow execution started' },
-        { status: 202 }
-      );
-    } catch {
-      // Fallback mock response
-      const mockInstance = {
-        id: Math.random().toString(36).substr(2, 9),
-        workflowId: params.id,
-        status: 'RUNNING',
-        startedAt: new Date(),
-      };
-      return NextResponse.json(
-        { instance: mockInstance, message: 'Workflow execution started' },
-        { status: 202 }
-      );
-    }
-  } catch (error) {
-    console.error(`POST /api/workflows/${params.id}/execute error:`, error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ instance }, { status: 201 });
+});

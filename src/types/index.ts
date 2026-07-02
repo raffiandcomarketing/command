@@ -275,14 +275,16 @@ export enum UserRole {
   VIEWER = 'VIEWER',
 }
 
+export type UserRoleName = 'ADMIN' | 'EXECUTIVE' | 'MANAGER' | 'MEMBER' | 'VIEWER';
+
 export interface SessionUser {
   id: string;
   email: string;
   name: string;
-  avatar?: string;
-  role: UserRole;
+  avatar?: string | null;
+  role: UserRoleName;
   isActive: boolean;
-  departmentSlugs?: string[];
+  departmentSlugs: string[];
 }
 
 export interface UserProfile {

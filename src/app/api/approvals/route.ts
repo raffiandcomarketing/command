@@ -1,117 +1,108 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { handle, parseBody, getPagination } from '@/lib/api/http';
+import { requireSession, assertCanWrite, getClientIp, isElevated } from '@/lib/api/guard';
+import { writeAudit, logActivity } from '@/lib/api/audit';
+import { createApprovalSchema, ApprovalTypeEnum } from '@/lib/validate';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+const approvalInclude = {
+  requester: { select: { id: true, name: true, email: true, avatar: true } },
+  approver: { select: { id: true, name: true, email: true, avatar: true } },
+  department: { select: { id: true, name: true, slug: true } },
+} satisfies Prisma.ApprovalInclude;
 
-    const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const type = searchParams.get('type');
-    const departmentId = searchParams.get('departmentId');
+const STATUS = ['PENDING', 'APPROVED', 'REJECTED', 'ESCALATED', 'CANCELLED'] as const;
 
-    try {
-      const approvals = await db.approval.findMany({
-        where: {
-          ...(status && { status }),
-          ...(type && { type }),
-          ...(departmentId && { departmentId }),
-        },
-        include: {
-          submittedBy: { select: { id: true, name: true, email: true } },
-          approvedBy: { select: { id: true, name: true, email: true } },
-          department: { select: { id: true, name: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+export const GET = handle(async (req: NextRequest) => {
+  const user = await requireSession();
 
-      return NextResponse.json({ approvals });
-    } catch {
-      // Fallback mock data
-      return NextResponse.json({
-        approvals: [
-          {
-            id: '1',
-            type: 'BUDGET',
-            status: 'PENDING',
-            departmentId: '1',
-            amount: 5000,
-            description: 'Sample approval request',
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    console.error('GET /api/approvals error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  const sp = req.nextUrl.searchParams;
+  const statusRaw = sp.get('status')?.toUpperCase();
+  const typeParam = ApprovalTypeEnum.safeParse(sp.get('type')?.toUpperCase());
+  const departmentId = sp.get('departmentId') || undefined;
+  const mine = sp.get('mine'); // 'requested' | 'to-decide'
+  const p = getPagination(req);
+
+  const where: Prisma.ApprovalWhereInput = {
+    ...(statusRaw && (STATUS as readonly string[]).includes(statusRaw) && {
+      status: statusRaw as (typeof STATUS)[number],
+    }),
+    ...(typeParam.success && { type: typeParam.data }),
+    ...(departmentId && { departmentId }),
+    ...(mine === 'requested' && { requesterId: user.id }),
+    ...(mine === 'to-decide' && {
+      status: 'PENDING',
+      ...(isElevated(user) ? {} : { approverId: user.id }),
+    }),
+  };
+
+  const [approvals, total] = await Promise.all([
+    db.approval.findMany({
+      where,
+      include: approvalInclude,
+      orderBy: { createdAt: 'desc' },
+      skip: p.skip,
+      take: p.take,
+    }),
+    db.approval.count({ where }),
+  ]);
+
+  return NextResponse.json({
+    approvals,
+    pagination: { total, page: p.page, pageSize: p.pageSize, pages: Math.max(1, Math.ceil(total / p.pageSize)) },
+  });
+});
+
+export const POST = handle(async (req: NextRequest) => {
+  const user = await requireSession();
+  assertCanWrite(user);
+
+  const data = await parseBody(req, createApprovalSchema);
+
+  const approval = await db.approval.create({
+    data: {
+      title: data.title,
+      description: data.description ?? null,
+      type: data.type,
+      requesterId: user.id,
+      approverId: data.approverId ?? null,
+      departmentId: data.departmentId ?? null,
+      priority: data.priority ?? 'MEDIUM',
+      dueDate: data.dueDate ?? null,
+      data: (data.data as object) ?? undefined,
+    },
+    include: approvalInclude,
+  });
+
+  void writeAudit({
+    userId: user.id,
+    action: 'create',
+    entity: 'Approval',
+    entityId: approval.id,
+    changes: { title: approval.title, type: approval.type },
+    ipAddress: getClientIp(req),
+  });
+  void logActivity({
+    userId: user.id,
+    type: 'approval.requested',
+    description: `requested approval "${approval.title}"`,
+    entityType: 'Approval',
+    entityId: approval.id,
+    departmentId: approval.departmentId,
+  });
+
+  if (approval.approverId) {
+    await db.notification.create({
+      data: {
+        userId: approval.approverId,
+        type: 'APPROVAL',
+        title: 'Approval requested',
+        message: `${user.name} requested your approval: "${approval.title}"`,
+        link: '/approvals',
+      },
+    });
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const body = await request.json();
-    const { type, description, amount, departmentId, metadata } = body;
-
-    if (!type || typeof type !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid approval type' },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const approval = await db.approval.create({
-        data: {
-          type,
-          status: 'PENDING',
-          description: description || '',
-          amount: amount || null,
-          departmentId: departmentId || null,
-          submittedById: session.user.id,
-          metadata: metadata || {},
-        },
-        include: {
-          submittedBy: { select: { id: true, name: true, email: true } },
-          department: { select: { id: true, name: true } },
-        },
-      });
-
-      return NextResponse.json({ approval }, { status: 201 });
-    } catch {
-      // Fallback mock response
-      const mockApproval = {
-        id: Math.random().toString(36).substr(2, 9),
-        type,
-        status: 'PENDING',
-        description: description || '',
-        amount: amount || null,
-      };
-      return NextResponse.json({ approval: mockApproval }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('POST /api/approvals error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ approval }, { status: 201 });
+});
