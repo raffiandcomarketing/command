@@ -15,8 +15,8 @@ interface PriorityIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const priorityConfig: Record<PriorityLevel, { color: string; bgColor: string; label: string; icon: React.ReactNode }> = {
   LOW: {
-    color: 'text-gray-700',
-    bgColor: 'bg-gray-100',
+    color: 'text-stone-700',
+    bgColor: 'bg-stone-100',
     label: 'Low',
     icon: <Radio className="h-4 w-4" />,
   },

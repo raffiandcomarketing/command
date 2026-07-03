@@ -15,7 +15,7 @@ const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
       <div
         ref={ref}
         className={cn(
-          'bg-gray-200',
+          'bg-stone-200',
           isVertical ? 'h-full w-px' : 'h-px w-full',
           className
         )}

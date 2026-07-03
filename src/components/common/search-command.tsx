@@ -145,11 +145,11 @@ const SearchCommand = forwardRef<HTMLDivElement, SearchCommandProps>(
         </div>
 
         {open && filteredItems.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-2xl z-50 max-h-96 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 rounded-lg shadow-2xl z-50 max-h-96 overflow-y-auto">
             {Object.entries(groupedItems).map(([category, categoryItems]) => (
               <div key={category}>
                 {category !== 'results' && (
-                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 sticky top-0">
+                  <div className="px-4 py-2 text-xs font-semibold text-stone-500 uppercase tracking-wider bg-stone-50 sticky top-0">
                     {category}
                   </div>
                 )}
@@ -167,20 +167,20 @@ const SearchCommand = forwardRef<HTMLDivElement, SearchCommandProps>(
                       }}
                       className={cn(
                         'w-full flex items-start gap-3 px-4 py-3 text-left transition-colors',
-                        isSelected ? 'bg-gray-100' : 'hover:bg-gray-50'
+                        isSelected ? 'bg-stone-100' : 'hover:bg-stone-50'
                       )}
                     >
                       {item.icon && (
-                        <div className="mt-0.5 flex-shrink-0 text-gray-400">
+                        <div className="mt-0.5 flex-shrink-0 text-stone-400">
                           {item.icon}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-stone-900">
                           {item.title}
                         </p>
                         {item.description && (
-                          <p className="text-xs text-gray-500 line-clamp-1">
+                          <p className="text-xs text-stone-500 line-clamp-1">
                             {item.description}
                           </p>
                         )}
@@ -194,8 +194,8 @@ const SearchCommand = forwardRef<HTMLDivElement, SearchCommandProps>(
         )}
 
         {open && query && filteredItems.length === 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-2xl z-50 p-8">
-            <p className="text-center text-gray-500 text-sm">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 rounded-lg shadow-2xl z-50 p-8">
+            <p className="text-center text-stone-500 text-sm">
               No results found for &ldquo;{query}&rdquo;
             </p>
           </div>

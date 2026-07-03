@@ -188,22 +188,22 @@ export default function CRMPage() {
   };
 
   const DealCard = ({ deal }: { deal: Deal }) => (
-    <Card className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+    <Card className="bg-white border border-stone-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className={cn('h-1 bg-gradient-to-r', deal.stage === 'LEAD' && 'from-blue-500 to-blue-600', deal.stage === 'OPPORTUNITY' && 'from-amber-500 to-amber-600', deal.stage === 'SALE' && 'from-emerald-500 to-emerald-600')} />
       <CardContent className="p-4 space-y-3">
         <div className="cursor-pointer" onClick={() => openEdit(deal)}>
-          <h3 className="font-semibold text-gray-900 text-sm">{deal.title}</h3>
-          <p className="text-xs text-gray-500 mt-1">{deal.contact?.name ?? 'No contact'}</p>
+          <h3 className="font-semibold text-stone-900 text-sm">{deal.title}</h3>
+          <p className="text-xs text-stone-500 mt-1">{deal.contact?.name ?? 'No contact'}</p>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Deal Value</span>
+            <span className="text-xs text-stone-500">Deal Value</span>
             <span className="font-semibold text-sm text-[#09203F]">${deal.value.toLocaleString()}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Close Date</span>
-            <span className="text-xs text-gray-700">
+            <span className="text-xs text-stone-500">Close Date</span>
+            <span className="text-xs text-stone-700">
               {deal.expectedCloseDate
                 ? new Date(deal.expectedCloseDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                 : '—'}
@@ -211,19 +211,19 @@ export default function CRMPage() {
           </div>
         </div>
 
-        <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+        <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-6 h-6 rounded-full bg-[#09203F]/10 flex items-center justify-center text-xs font-medium text-[#09203F] flex-shrink-0">
               {initials(deal.assignee?.name)}
             </div>
-            <span className="text-xs text-gray-600 truncate">{deal.assignee?.name ?? 'Unassigned'}</span>
+            <span className="text-xs text-stone-600 truncate">{deal.assignee?.name ?? 'Unassigned'}</span>
           </div>
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <button
               title="Move back"
               disabled={deal.stage === 'LEAD' || busyDealId === deal.id}
               onClick={() => void moveStage(deal, -1)}
-              className="p-1.5 rounded text-gray-400 hover:text-[#09203F] hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded text-stone-400 hover:text-[#09203F] hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
             </button>
@@ -231,7 +231,7 @@ export default function CRMPage() {
               title="Move forward"
               disabled={deal.stage === 'SALE' || busyDealId === deal.id}
               onClick={() => void moveStage(deal, 1)}
-              className="p-1.5 rounded text-gray-400 hover:text-[#09203F] hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded text-stone-400 hover:text-[#09203F] hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -239,7 +239,7 @@ export default function CRMPage() {
               title="Delete deal"
               disabled={busyDealId === deal.id}
               onClick={() => void remove(deal)}
-              className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-30"
+              className="p-1.5 rounded text-stone-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-30"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -256,10 +256,10 @@ export default function CRMPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">CRM</h1>
-          <p className="text-gray-500">Manage your sales pipeline and customer relationships</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">CRM</h1>
+          <p className="text-stone-500">Manage your sales pipeline and customer relationships</p>
         </div>
-        <Button onClick={openCreate} className="bg-[#09203F] hover:bg-[#09203F]/90 text-white">
+        <Button onClick={openCreate} className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
           <Plus className="w-4 h-4 mr-2" />
           Add Deal
         </Button>
@@ -280,11 +280,11 @@ export default function CRMPage() {
 
       {/* Pipeline Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white border border-gray-200">
+        <Card className="bg-white border border-stone-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Pipeline</p>
+                <p className="text-sm text-stone-500 mb-1">Total Pipeline</p>
                 <p className="text-2xl font-bold text-[#09203F]">${totalPipelineValue.toLocaleString()}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -294,11 +294,11 @@ export default function CRMPage() {
           </CardContent>
         </Card>
         {STAGES.map((s) => (
-          <Card key={s} className="bg-white border border-gray-200">
+          <Card key={s} className="bg-white border border-stone-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">{STAGE_META[s].title}s</p>
+                  <p className="text-sm text-stone-500 mb-1">{STAGE_META[s].title}s</p>
                   <p
                     className={cn(
                       'text-2xl font-bold',
@@ -332,15 +332,15 @@ export default function CRMPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {STAGES.map((stage) => (
             <div key={stage} className="flex flex-col gap-4">
-              <div className={cn('rounded-lg p-4 bg-gradient-to-br from-white to-gray-50', STAGE_META[stage].border)}>
+              <div className={cn('rounded-lg p-4 bg-gradient-to-br from-white to-stone-50', STAGE_META[stage].border)}>
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                     <div className={cn('w-2 h-2 rounded-full', STAGE_META[stage].accent)} />
                     {STAGE_META[stage].title}
                   </h2>
-                  <Badge className="bg-gray-200 text-gray-700">{byStage[stage].length}</Badge>
+                  <Badge className="bg-stone-200 text-stone-700">{byStage[stage].length}</Badge>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-stone-600">
                   Total: <span className="font-semibold text-[#09203F]">${totals[stage].toLocaleString()}</span>
                 </div>
               </div>
@@ -349,7 +349,7 @@ export default function CRMPage() {
                 {byStage[stage].length > 0 ? (
                   byStage[stage].map((deal) => <DealCard key={deal.id} deal={deal} />)
                 ) : (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-stone-400">
                     <Briefcase className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No deals in this stage</p>
                   </div>
@@ -419,16 +419,16 @@ export default function CRMPage() {
           />
 
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Notes</label>
+            <label className="text-sm font-medium text-stone-700 block mb-2">Notes</label>
             <textarea
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-20 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg min-h-20 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
             />
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#09203F]/90 text-white">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
               {form.id ? 'Save Changes' : 'Create Deal'}
             </Button>
             <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving} className="flex-1">

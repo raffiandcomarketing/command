@@ -4,17 +4,18 @@
 
 @layer base {
   :root {
-    /* Light Theme Colors */
-    --background: white;
-    --foreground: #111827;
-    --card: white;
-    --card-border: #E5E7EB;
-    --muted: #F9FAFB;
-    --muted-foreground: #6B7280;
+    /* Boutique light theme */
+    --background: #FAF8F4; /* warm porcelain */
+    --foreground: #292524;
+    --card: #FFFFFF;
+    --card-border: #E7E5E4;
+    --muted: #F5F5F4;
+    --muted-foreground: #78716C;
     --accent: #09203F;
     --accent-foreground: white;
-    --sidebar-bg: white;
-    --sidebar-border: #E5E7EB;
+    --gold: #BC9A5F;
+    --sidebar-bg: #081A33;
+    --sidebar-border: rgba(255, 255, 255, 0.06);
 
     /* Brand Navy */
     --color-brand: #09203F;
@@ -46,18 +47,30 @@
   }
 
   body {
-    @apply bg-white text-gray-900 antialiased transition-colors duration-300;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-      'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    @apply bg-ivory-100 text-stone-800 antialiased transition-colors duration-300;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue',
+      sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04';
+  }
+
+  /* Display serif for the two top heading levels - the boutique voice.
+     Component-level classNames can still override per case. */
+  h1,
+  h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: 0.005em;
   }
 
   /* Selection Styling */
   ::selection {
-    @apply bg-brand-100 text-gray-900;
+    background: rgba(188, 154, 95, 0.25);
+    @apply text-stone-900;
   }
 
   ::-moz-selection {
-    @apply bg-brand-100 text-gray-900;
+    background: rgba(188, 154, 95, 0.25);
+    @apply text-stone-900;
   }
 
   /* Scrollbar Styling */
@@ -66,15 +79,25 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100;
+    @apply bg-ivory-200;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded hover:bg-gray-400;
+    @apply bg-stone-300 rounded hover:bg-stone-400;
   }
 }
 
 @layer components {
+  /* Small-caps gold eyebrow label above page titles */
+  .eyebrow {
+    @apply text-[11px] font-sans font-semibold uppercase tracking-luxe text-gold-600;
+  }
+
+  /* Hairline rule with a gold heart */
+  .rule-gold {
+    @apply h-px w-12 bg-gold-400;
+  }
+
   /* Primary Button */
   .btn-primary {
     @apply inline-flex items-center justify-center px-6 py-3 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#09203F] text-white hover:bg-[#0d2a4f] shadow-luxury hover:shadow-luxury-lg;

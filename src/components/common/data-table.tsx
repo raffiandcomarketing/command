@@ -106,7 +106,7 @@ const DataTable = forwardRef<HTMLDivElement, DataTableProps<any>>(
           {loading ? (
             <div className="space-y-3 p-6">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 bg-gray-200 rounded-lg animate-pulse" />
+                <div key={i} className="h-12 bg-stone-200 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : (
@@ -130,7 +130,7 @@ const DataTable = forwardRef<HTMLDivElement, DataTableProps<any>>(
                   key={column.id}
                   style={{ width: column.width }}
                   className={cn(
-                    'cursor-pointer select-none hover:bg-gray-100 transition-colors',
+                    'cursor-pointer select-none hover:bg-stone-100 transition-colors',
                     column.align === 'center' && 'text-center',
                     column.align === 'right' && 'text-right'
                   )}
@@ -157,8 +157,8 @@ const DataTable = forwardRef<HTMLDivElement, DataTableProps<any>>(
               <TableRow
                 key={getRowKey(row)}
                 className={cn(
-                  striped && index % 2 === 0 && 'bg-gray-50',
-                  hoverable && onRowClick && 'cursor-pointer hover:bg-gray-100'
+                  striped && index % 2 === 0 && 'bg-stone-50',
+                  hoverable && onRowClick && 'cursor-pointer hover:bg-stone-100'
                 )}
                 onClick={() => onRowClick?.(row)}
               >
@@ -185,8 +185,8 @@ const DataTable = forwardRef<HTMLDivElement, DataTableProps<any>>(
         </Table>
 
         {pagination && (
-          <div className="flex items-center justify-between px-4 py-4 border-t border-gray-200 bg-white rounded-b-lg">
-            <span className="text-xs text-gray-600">
+          <div className="flex items-center justify-between px-4 py-4 border-t border-stone-200 bg-white rounded-b-lg">
+            <span className="text-xs text-stone-600">
               Page {pagination.currentPage} of{' '}
               {Math.ceil((pagination.total || 0) / pagination.pageSize)}
             </span>

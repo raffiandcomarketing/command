@@ -61,8 +61,8 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
           onClick={() => setOpen(!open)}
           className={cn(
             'w-full inline-flex items-center justify-between rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-            'bg-white hover:bg-gray-50 text-gray-900',
-            'border border-gray-300',
+            'bg-white hover:bg-stone-50 text-stone-900',
+            'border border-stone-300',
             'focus:outline-none focus:ring-2 focus:ring-[#09203F]'
           )}
         >
@@ -78,7 +78,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
         {open && (
           <div
             className={cn(
-              'absolute top-full mt-2 w-full rounded-lg bg-white border border-gray-200 shadow-lg z-50',
+              'absolute top-full mt-2 w-full rounded-lg bg-white border border-stone-200 shadow-lg z-50',
               align === 'right' && 'right-0',
               align === 'left' && 'left-0'
             )}
@@ -87,7 +87,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
               {items.map((item, index) => (
                 <React.Fragment key={index}>
                   {item.divider ? (
-                    <div className="my-1 h-px bg-gray-200" />
+                    <div className="my-1 h-px bg-stone-200" />
                   ) : (
                     <button
                       onClick={() => handleSelect(item.value)}
@@ -95,8 +95,8 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
                       className={cn(
                         'w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors',
                         item.disabled
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'text-stone-400 cursor-not-allowed'
+                          : 'text-stone-700 hover:bg-stone-50'
                       )}
                     >
                       {item.icon && item.icon}

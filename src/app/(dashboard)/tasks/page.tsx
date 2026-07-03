@@ -38,11 +38,11 @@ const STATUSES = ['PENDING', 'IN_PROGRESS', 'REVIEW', 'COMPLETED', 'CANCELLED'] 
 const PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT', 'CRITICAL'] as const;
 
 const statusColors: Record<string, string> = {
-  PENDING: 'bg-gray-500/10 text-gray-700 border-gray-200',
+  PENDING: 'bg-stone-500/10 text-stone-700 border-stone-200',
   IN_PROGRESS: 'bg-blue-500/10 text-blue-700 border-blue-200',
   REVIEW: 'bg-purple-500/10 text-purple-700 border-purple-200',
   COMPLETED: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
-  CANCELLED: 'bg-gray-400/10 text-gray-500 border-gray-200',
+  CANCELLED: 'bg-stone-400/10 text-stone-500 border-stone-200',
 };
 
 const priorityColors: Record<string, string> = {
@@ -233,7 +233,7 @@ export default function TasksPage() {
       className={cn(
         active
           ? 'bg-[#09203F] text-white border-[#09203F] hover:bg-[#0a2651]'
-          : 'bg-white border-gray-200 text-gray-700 hover:border-[#09203F]/50'
+          : 'bg-white border-stone-200 text-stone-700 hover:border-[#09203F]/50'
       )}
     >
       {children}
@@ -276,10 +276,10 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>
-          <p className="text-gray-500">Track and manage tasks across your organization.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">Tasks</h1>
+          <p className="text-stone-500">Track and manage tasks across your organization.</p>
         </div>
-        <Button onClick={openCreate} className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium">
+        <Button onClick={openCreate} className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium">
           <Plus className="w-4 h-4 mr-2" />
           Create Task
         </Button>
@@ -288,22 +288,22 @@ export default function TasksPage() {
       {/* Search and View Toggle */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
           <input
             type="text"
             placeholder="Search tasks..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#09203F]"
+            className="w-full pl-12 pr-4 py-2 bg-white border border-stone-200 rounded-lg text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#09203F]"
           />
         </div>
 
-        <div className="flex gap-2 bg-white border border-gray-200 rounded-lg p-1">
+        <div className="flex gap-2 bg-white border border-stone-200 rounded-lg p-1">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => setViewMode('list')}
-            className={cn('px-3', viewMode === 'list' ? 'bg-gray-100 text-gray-900' : 'bg-transparent text-gray-400 hover:text-gray-700')}
+            className={cn('px-3', viewMode === 'list' ? 'bg-stone-100 text-stone-900' : 'bg-transparent text-stone-400 hover:text-stone-700')}
           >
             <List className="w-4 h-4" />
           </Button>
@@ -311,7 +311,7 @@ export default function TasksPage() {
             size="sm"
             variant="ghost"
             onClick={() => setViewMode('grid')}
-            className={cn('px-3', viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'bg-transparent text-gray-400 hover:text-gray-700')}
+            className={cn('px-3', viewMode === 'grid' ? 'bg-stone-100 text-stone-900' : 'bg-transparent text-stone-400 hover:text-stone-700')}
           >
             <LayoutGrid className="w-4 h-4" />
           </Button>
@@ -321,7 +321,7 @@ export default function TasksPage() {
       {/* Filters */}
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <label className="text-sm font-medium text-stone-700 mb-3 flex items-center gap-2">
             <Filter className="w-4 h-4" />
             Status
           </label>
@@ -342,7 +342,7 @@ export default function TasksPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <label className="text-sm font-medium text-stone-700 mb-3 flex items-center gap-2">
             <Filter className="w-4 h-4" />
             Priority
           </label>
@@ -364,7 +364,7 @@ export default function TasksPage() {
 
         {departments.length > 0 && (
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <label className="text-sm font-medium text-stone-700 mb-3 flex items-center gap-2">
               <Filter className="w-4 h-4" />
               Department
             </label>
@@ -418,33 +418,33 @@ export default function TasksPage() {
                 <Card
                   key={task.id}
                   onClick={() => openEdit(task)}
-                  className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-[#09203F]/20 transition-all cursor-pointer"
+                  className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md hover:border-[#09203F]/20 transition-all cursor-pointer"
                 >
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4 gap-2">
-                      <h3 className="text-lg font-semibold text-gray-900 flex-1">{task.title}</h3>
+                      <h3 className="text-lg font-semibold text-stone-900 flex-1">{task.title}</h3>
                       <Badge variant="outline" className={statusColors[task.status]}>
                         {label(task.status)}
                       </Badge>
                     </div>
 
-                    {task.description && <p className="text-sm text-gray-500 mb-4 line-clamp-2">{task.description}</p>}
+                    {task.description && <p className="text-sm text-stone-500 mb-4 line-clamp-2">{task.description}</p>}
 
-                    <div className="space-y-3 pt-4 border-t border-gray-200">
+                    <div className="space-y-3 pt-4 border-t border-stone-200">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Assignee</span>
-                        <span className="text-gray-900 font-medium">{task.assignee?.name ?? 'Unassigned'}</span>
+                        <span className="text-stone-500">Assignee</span>
+                        <span className="text-stone-900 font-medium">{task.assignee?.name ?? 'Unassigned'}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Department</span>
-                        <span className="text-gray-900 font-medium">{task.department?.name ?? '—'}</span>
+                        <span className="text-stone-500">Department</span>
+                        <span className="text-stone-900 font-medium">{task.department?.name ?? '—'}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Due Date</span>
-                        <span className="text-gray-900 font-medium">{task.dueDate ? formatDate(task.dueDate) : '—'}</span>
+                        <span className="text-stone-500">Due Date</span>
+                        <span className="text-stone-900 font-medium">{task.dueDate ? formatDate(task.dueDate) : '—'}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Priority</span>
+                        <span className="text-stone-500">Priority</span>
                         <Badge variant="outline" className={priorityColors[task.priority]}>
                           {label(task.priority)}
                         </Badge>
@@ -458,23 +458,23 @@ export default function TasksPage() {
               ))}
             </div>
           ) : (
-            <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-              <div className="border-b border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900">All Tasks ({pagination?.total ?? tasks.length})</h2>
+            <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+              <div className="border-b border-stone-200 p-6">
+                <h2 className="text-lg font-semibold text-stone-900">All Tasks ({pagination?.total ?? tasks.length})</h2>
               </div>
               <div>
                 {tasks.map((task) => (
                   <div
                     key={task.id}
                     onClick={() => openEdit(task)}
-                    className="flex items-center justify-between p-4 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 border-b border-stone-200 last:border-0 hover:bg-stone-50 transition-colors cursor-pointer"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
                         <CheckSquare className="w-5 h-5 text-[#09203F] flex-shrink-0" />
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{task.title}</p>
-                          {task.description && <p className="text-sm text-gray-500 mt-1 truncate">{task.description}</p>}
+                          <p className="font-medium text-stone-900 truncate">{task.title}</p>
+                          {task.description && <p className="text-sm text-stone-500 mt-1 truncate">{task.description}</p>}
                         </div>
                       </div>
                     </div>
@@ -486,10 +486,10 @@ export default function TasksPage() {
                         {label(task.priority)}
                       </Badge>
                       <div className="w-32 text-right hidden md:block">
-                        <p className="text-sm text-gray-500 truncate">{task.assignee?.name ?? 'Unassigned'}</p>
+                        <p className="text-sm text-stone-500 truncate">{task.assignee?.name ?? 'Unassigned'}</p>
                       </div>
                       <div className="w-24 text-right hidden md:block">
-                        <p className="text-sm text-gray-500">{task.dueDate ? formatDate(task.dueDate) : '—'}</p>
+                        <p className="text-sm text-stone-500">{task.dueDate ? formatDate(task.dueDate) : '—'}</p>
                       </div>
                       <TaskActions task={task} />
                     </div>
@@ -505,7 +505,7 @@ export default function TasksPage() {
               <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                 Previous
               </Button>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-stone-500">
                 Page {pagination.page} of {pagination.pages}
               </span>
               <Button variant="outline" size="sm" disabled={page >= pagination.pages} onClick={() => setPage((p) => p + 1)}>
@@ -519,14 +519,14 @@ export default function TasksPage() {
       {/* Empty state */}
       {tasks !== null && tasks.length === 0 && !loadError && (
         <div className="text-center py-12">
-          <CheckSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-2">No tasks found</p>
-          <p className="text-gray-400 text-sm mb-4">
+          <CheckSquare className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+          <p className="text-stone-500 mb-2">No tasks found</p>
+          <p className="text-stone-400 text-sm mb-4">
             {debouncedSearch || statusFilter || priorityFilter || departmentFilter
               ? 'Try adjusting your filters, or create a new task.'
               : 'Create your first task to get started.'}
           </p>
-          <Button onClick={openCreate} className="bg-[#09203F] hover:bg-[#0a2651] text-white">
+          <Button onClick={openCreate} className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
             <Plus className="w-4 h-4 mr-2" />
             Create Task
           </Button>
@@ -559,11 +559,11 @@ export default function TasksPage() {
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <label className="block text-sm font-medium text-stone-700 mb-2">Description</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 min-h-20 resize-none focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20"
+              className="w-full px-4 py-2 rounded-lg bg-white border border-stone-300 text-stone-900 min-h-20 resize-none focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20"
             />
           </div>
 
@@ -600,10 +600,10 @@ export default function TasksPage() {
           <Input label="Due Date" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
 
           <div className="flex gap-3 pt-2">
-            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-11">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium h-11">
               {form.id ? 'Save Changes' : 'Create Task'}
             </Button>
-            <Button onClick={() => setModalOpen(false)} disabled={saving} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium h-11">
+            <Button onClick={() => setModalOpen(false)} disabled={saving} className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-900 font-medium h-11">
               Cancel
             </Button>
           </div>

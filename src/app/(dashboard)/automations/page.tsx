@@ -149,8 +149,8 @@ export default function AutomationsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Automations</h1>
-          <p className="text-gray-500">Rule-based actions with a full execution log.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">Automations</h1>
+          <p className="text-stone-500">Rule-based actions with a full execution log.</p>
         </div>
         {elevated && (
           <Button
@@ -159,7 +159,7 @@ export default function AutomationsPage() {
               setFormError(null);
               setModalOpen(true);
             }}
-            className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium"
+            className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Rule
@@ -167,7 +167,7 @@ export default function AutomationsPage() {
         )}
       </div>
 
-      <div className="flex items-start gap-3 text-sm text-gray-600 bg-blue-50 border border-blue-100 rounded-lg p-4">
+      <div className="flex items-start gap-3 text-sm text-stone-600 bg-blue-50 border border-blue-100 rounded-lg p-4">
         <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
         <p>
           Rules execute on demand today and every run is logged with duration and results. Scheduled (cron) and
@@ -199,8 +199,8 @@ export default function AutomationsPage() {
 
       {automations !== null && automations.length === 0 && !loadError && (
         <div className="text-center py-16">
-          <Zap className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-2">No automation rules yet.</p>
+          <Zap className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+          <p className="text-stone-500 mb-2">No automation rules yet.</p>
           {elevated && (
             <Button variant="outline" onClick={() => setModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
@@ -212,28 +212,28 @@ export default function AutomationsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {(automations ?? []).map((a) => (
-          <Card key={a.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <Card key={a.id} className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="p-6 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-lg font-semibold text-gray-900">{a.name}</h3>
+                    <h3 className="text-lg font-semibold text-stone-900">{a.name}</h3>
                     <Badge
                       variant="outline"
                       className={
                         a.isActive
                           ? 'bg-emerald-500/10 text-emerald-700 border-emerald-200'
-                          : 'bg-gray-500/10 text-gray-500 border-gray-200'
+                          : 'bg-stone-500/10 text-stone-500 border-stone-200'
                       }
                     >
                       {a.isActive ? 'active' : 'inactive'}
                     </Badge>
-                    <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
+                    <Badge variant="outline" className="bg-stone-100 text-stone-600 border-stone-200">
                       {a.triggerType.toLowerCase()} trigger
                     </Badge>
                   </div>
-                  {a.description && <p className="text-sm text-gray-500 mt-1">{a.description}</p>}
-                  <p className="text-xs text-gray-400 mt-1">
+                  {a.description && <p className="text-sm text-stone-500 mt-1">{a.description}</p>}
+                  <p className="text-xs text-stone-400 mt-1">
                     {a.department?.name ?? 'Company-wide'} · {a.executionCount} execution{a.executionCount === 1 ? '' : 's'}
                     {a.lastTriggeredAt && ` · last run ${new Date(a.lastTriggeredAt).toLocaleString()}`}
                     {a.cooldownMinutes ? ` · ${a.cooldownMinutes}m cooldown` : ''}
@@ -250,13 +250,13 @@ export default function AutomationsPage() {
               </div>
 
               {elevated && (
-                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
                   <Button
                     size="sm"
                     disabled={!a.isActive || busyId === a.id}
                     loading={busyId === a.id}
                     onClick={() => void run(a)}
-                    className="bg-[#09203F] hover:bg-[#0a2651] text-white"
+                    className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white"
                   >
                     <Play className="w-4 h-4 mr-1.5" />
                     Run now
@@ -290,11 +290,11 @@ export default function AutomationsPage() {
 
           <Input label="Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g., Overdue repair follow-up" />
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Description</label>
+            <label className="text-sm font-medium text-stone-700 block mb-2">Description</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-16 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg min-h-16 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
             />
           </div>
           <Select
@@ -319,7 +319,7 @@ export default function AutomationsPage() {
           />
 
           <div className="flex gap-3 pt-2">
-            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
               Create Rule
             </Button>
             <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving} className="flex-1">

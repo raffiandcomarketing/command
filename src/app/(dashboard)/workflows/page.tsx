@@ -37,10 +37,10 @@ const stepBadge: Record<string, string> = {
   TASK: 'bg-blue-500/10 text-blue-700 border-blue-200',
   APPROVAL: 'bg-purple-500/10 text-purple-700 border-purple-200',
   NOTIFICATION: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
-  WEBHOOK: 'bg-gray-500/10 text-gray-600 border-gray-200',
-  CONDITION: 'bg-gray-500/10 text-gray-600 border-gray-200',
-  DELAY: 'bg-gray-500/10 text-gray-600 border-gray-200',
-  INTEGRATION: 'bg-gray-500/10 text-gray-600 border-gray-200',
+  WEBHOOK: 'bg-stone-500/10 text-stone-600 border-stone-200',
+  CONDITION: 'bg-stone-500/10 text-stone-600 border-stone-200',
+  DELAY: 'bg-stone-500/10 text-stone-600 border-stone-200',
+  INTEGRATION: 'bg-stone-500/10 text-stone-600 border-stone-200',
 };
 
 export default function WorkflowsPage() {
@@ -170,8 +170,8 @@ export default function WorkflowsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Workflows</h1>
-          <p className="text-gray-500">Define and run multi-step business processes.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">Workflows</h1>
+          <p className="text-stone-500">Define and run multi-step business processes.</p>
         </div>
         {elevated && (
           <Button
@@ -181,7 +181,7 @@ export default function WorkflowsPage() {
               setFormError(null);
               setModalOpen(true);
             }}
-            className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium"
+            className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Workflow
@@ -189,7 +189,7 @@ export default function WorkflowsPage() {
         )}
       </div>
 
-      <div className="flex items-start gap-3 text-sm text-gray-600 bg-blue-50 border border-blue-100 rounded-lg p-4">
+      <div className="flex items-start gap-3 text-sm text-stone-600 bg-blue-50 border border-blue-100 rounded-lg p-4">
         <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
         <p>
           Running a workflow executes its <strong>task</strong>, <strong>approval</strong>, and{' '}
@@ -199,7 +199,7 @@ export default function WorkflowsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 bg-white rounded-t-lg">
+      <div className="flex border-b border-stone-200 bg-white rounded-t-lg">
         {(['workflows', 'templates'] as const).map((t) => (
           <button
             key={t}
@@ -209,7 +209,7 @@ export default function WorkflowsPage() {
             }}
             className={cn(
               'px-5 py-3 text-sm font-medium border-b-2 -mb-px capitalize transition-colors',
-              tab === t ? 'border-[#09203F] text-[#09203F]' : 'border-transparent text-gray-500 hover:text-gray-800'
+              tab === t ? 'border-[#09203F] text-[#09203F]' : 'border-transparent text-stone-500 hover:text-stone-800'
             )}
           >
             {t}
@@ -240,8 +240,8 @@ export default function WorkflowsPage() {
 
       {workflows !== null && workflows.length === 0 && !loadError && (
         <div className="text-center py-16">
-          <GitBranch className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-2">{tab === 'templates' ? 'No templates yet.' : 'No workflows yet.'}</p>
+          <GitBranch className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+          <p className="text-stone-500 mb-2">{tab === 'templates' ? 'No templates yet.' : 'No workflows yet.'}</p>
           {elevated && tab === 'workflows' && (
             <Button variant="outline" onClick={() => setModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
@@ -253,12 +253,12 @@ export default function WorkflowsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {(workflows ?? []).map((wf) => (
-          <Card key={wf.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <Card key={wf.id} className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="p-6 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-lg font-semibold text-gray-900">{wf.name}</h3>
+                    <h3 className="text-lg font-semibold text-stone-900">{wf.name}</h3>
                     {wf.isTemplate ? (
                       <Badge variant="outline" className="bg-purple-500/10 text-purple-700 border-purple-200">
                         template
@@ -269,15 +269,15 @@ export default function WorkflowsPage() {
                         className={
                           wf.isActive
                             ? 'bg-emerald-500/10 text-emerald-700 border-emerald-200'
-                            : 'bg-gray-500/10 text-gray-500 border-gray-200'
+                            : 'bg-stone-500/10 text-stone-500 border-stone-200'
                         }
                       >
                         {wf.isActive ? 'active' : 'inactive'}
                       </Badge>
                     )}
                   </div>
-                  {wf.description && <p className="text-sm text-gray-500 mt-1">{wf.description}</p>}
-                  <p className="text-xs text-gray-400 mt-1">
+                  {wf.description && <p className="text-sm text-stone-500 mt-1">{wf.description}</p>}
+                  <p className="text-xs text-stone-400 mt-1">
                     {wf.department?.name ?? 'Company-wide'} · trigger: {wf.triggerType.toLowerCase()} ·{' '}
                     {wf._count.workflowInstances} run{wf._count.workflowInstances === 1 ? '' : 's'}
                   </p>
@@ -292,7 +292,7 @@ export default function WorkflowsPage() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
                 {wf.isTemplate ? (
                   elevated && (
                     <Button size="sm" variant="outline" onClick={() => applyTemplate(wf)}>
@@ -307,7 +307,7 @@ export default function WorkflowsPage() {
                       disabled={!wf.isActive || busyId === wf.id}
                       loading={busyId === wf.id}
                       onClick={() => void run(wf)}
-                      className="bg-[#09203F] hover:bg-[#0a2651] text-white"
+                      className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white"
                     >
                       <Play className="w-4 h-4 mr-1.5" />
                       Run
@@ -349,20 +349,20 @@ export default function WorkflowsPage() {
 
           <Input label="Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g., New client onboarding" />
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Description</label>
+            <label className="text-sm font-medium text-stone-700 block mb-2">Description</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-16 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg min-h-16 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Steps *</label>
+            <label className="text-sm font-medium text-stone-700 block mb-2">Steps *</label>
             <div className="space-y-2">
               {steps.map((s, i) => (
                 <div key={i} className="flex gap-2 items-center">
-                  <span className="text-xs text-gray-400 w-5 text-right">{i + 1}.</span>
+                  <span className="text-xs text-stone-400 w-5 text-right">{i + 1}.</span>
                   <Input
                     placeholder="Step name (e.g., Prepare welcome pack)"
                     value={s.name}
@@ -381,7 +381,7 @@ export default function WorkflowsPage() {
                   <button
                     onClick={() => setSteps(steps.filter((_, j) => j !== i))}
                     disabled={steps.length === 1}
-                    className="p-2 text-gray-400 hover:text-red-600 disabled:opacity-30"
+                    className="p-2 text-stone-400 hover:text-red-600 disabled:opacity-30"
                     title="Remove step"
                   >
                     <X className="w-4 h-4" />
@@ -396,7 +396,7 @@ export default function WorkflowsPage() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
               Create Workflow
             </Button>
             <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving} className="flex-1">

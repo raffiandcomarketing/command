@@ -58,7 +58,7 @@ const TabList = forwardRef<HTMLDivElement, TabListProps>(
     <div
       ref={ref}
       className={cn(
-        'flex border-b border-gray-200 bg-white rounded-t-lg',
+        'flex border-b border-stone-200 bg-white rounded-t-lg',
         className
       )}
       {...props}
@@ -85,7 +85,7 @@ const Tab = forwardRef<HTMLButtonElement, TabProps>(
           'px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 -mb-px',
           isActive
             ? 'border-b-[#09203F] text-[#09203F]'
-            : 'border-b-transparent text-gray-500 hover:text-gray-700',
+            : 'border-b-transparent text-stone-500 hover:text-stone-700',
           className
         )}
         {...props}

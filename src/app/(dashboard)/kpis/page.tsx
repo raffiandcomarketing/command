@@ -127,8 +127,8 @@ export default function KpisPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">KPIs</h1>
-          <p className="text-gray-500">Performance indicators computed from live business data.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">KPIs</h1>
+          <p className="text-stone-500">Performance indicators computed from live business data.</p>
         </div>
         <div className="flex gap-2">
           {elevated && (
@@ -137,7 +137,7 @@ export default function KpisPage() {
               Recompute Now
             </Button>
           )}
-          <Button onClick={exportCsv} className="bg-[#09203F] hover:bg-[#0a2651] text-white">
+          <Button onClick={exportCsv} className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
             <Download className="w-4 h-4 mr-2" />
             Export CSV
           </Button>
@@ -155,7 +155,7 @@ export default function KpisPage() {
             className={cn(
               selectedDept === dept
                 ? 'bg-[#09203F] text-white border-[#09203F] hover:bg-[#0a2651]'
-                : 'bg-white border-gray-200 text-gray-700 hover:border-[#09203F]/50'
+                : 'bg-white border-stone-200 text-stone-700 hover:border-[#09203F]/50'
             )}
           >
             {dept}
@@ -186,15 +186,15 @@ export default function KpisPage() {
 
       {kpis !== null && filtered.length === 0 && !loadError && (
         <div className="text-center py-16">
-          <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-2">No KPI values yet</p>
+          <BarChart3 className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+          <p className="text-stone-500 mb-2">No KPI values yet</p>
           {elevated ? (
             <Button variant="outline" onClick={() => void compute()} loading={computing}>
               <RefreshCcw className="w-4 h-4 mr-2" />
               Compute from live data
             </Button>
           ) : (
-            <p className="text-gray-400 text-sm">Ask a manager to run the first KPI computation.</p>
+            <p className="text-stone-400 text-sm">Ask a manager to run the first KPI computation.</p>
           )}
         </div>
       )}
@@ -213,12 +213,12 @@ export default function KpisPage() {
               : null;
 
           return (
-            <Card key={kpi.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-[#09203F]/20 transition-all">
+            <Card key={kpi.id} className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md hover:border-[#09203F]/20 transition-all">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{kpi.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">{kpi.department?.name ?? 'Company-wide'}</p>
+                    <h3 className="text-lg font-semibold text-stone-900">{kpi.name}</h3>
+                    <p className="text-sm text-stone-500 mt-1">{kpi.department?.name ?? 'Company-wide'}</p>
                   </div>
                   <Badge
                     variant="outline"
@@ -227,7 +227,7 @@ export default function KpisPage() {
                       status === 'healthy' && 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
                       status === 'warning' && 'bg-yellow-500/10 text-yellow-700 border-yellow-200',
                       status === 'critical' && 'bg-red-500/10 text-red-700 border-red-200',
-                      status === 'unknown' && 'bg-gray-500/10 text-gray-600 border-gray-200'
+                      status === 'unknown' && 'bg-stone-500/10 text-stone-600 border-stone-200'
                     )}
                   >
                     {status === 'unknown' ? 'no data' : status}
@@ -236,7 +236,7 @@ export default function KpisPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+                    <div className="w-full bg-stone-200 h-3 rounded-full overflow-hidden">
                       <div
                         className={cn(
                           'h-full transition-all',
@@ -245,40 +245,40 @@ export default function KpisPage() {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500 mt-2">
+                    <div className="flex justify-between text-xs text-stone-500 mt-2">
                       <span>0</span>
                       <span>{value !== null ? value.toLocaleString() : '—'}</span>
                       <span>{kpi.targetValue.toLocaleString()} (target)</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-stone-200">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Current</p>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className="text-xs text-stone-500 mb-1">Current</p>
+                      <p className="text-lg font-bold text-stone-900">
                         {value !== null ? value.toLocaleString() : '—'}
-                        <span className="text-xs text-gray-400 ml-1">{kpi.unit}</span>
+                        <span className="text-xs text-stone-400 ml-1">{kpi.unit}</span>
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Target</p>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className="text-xs text-stone-500 mb-1">Target</p>
+                      <p className="text-lg font-bold text-stone-900">
                         {kpi.targetValue.toLocaleString()}
-                        <span className="text-xs text-gray-400 ml-1">{kpi.unit}</span>
+                        <span className="text-xs text-stone-400 ml-1">{kpi.unit}</span>
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Trend</p>
+                      <p className="text-xs text-stone-500 mb-1">Trend</p>
                       <div className="flex items-center gap-1">
                         {trendPct !== null && trendPct > 0 && <TrendingUp className="w-4 h-4 text-emerald-600" />}
                         {trendPct !== null && trendPct < 0 && <TrendingDown className="w-4 h-4 text-red-600" />}
                         <span
                           className={cn(
                             'text-sm font-bold',
-                            trendPct === null && 'text-gray-400',
+                            trendPct === null && 'text-stone-400',
                             trendPct !== null && trendPct > 0 && 'text-emerald-600',
                             trendPct !== null && trendPct < 0 && 'text-red-600',
-                            trendPct === 0 && 'text-gray-500'
+                            trendPct === 0 && 'text-stone-500'
                           )}
                         >
                           {trendPct === null ? '—' : trendPct === 0 ? '0%' : `${trendPct > 0 ? '+' : ''}${trendPct}%`}
@@ -287,11 +287,11 @@ export default function KpisPage() {
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
-                    <p className="text-xs text-gray-500">
+                  <div className="pt-4 border-t border-stone-200 flex items-center justify-between">
+                    <p className="text-xs text-stone-500">
                       {latest ? `Last computed ${new Date(latest.recordedAt).toLocaleString()}` : 'Not yet computed'}
                     </p>
-                    <p className="text-[10px] uppercase tracking-wide text-gray-400">{kpi.dataSource}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-stone-400">{kpi.dataSource}</p>
                   </div>
                 </div>
               </div>

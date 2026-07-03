@@ -100,24 +100,24 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
       <div
         className={cn(
           'flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 relative',
-          'hover:bg-gray-50',
-          active && 'bg-[#09203F]/10 text-[#09203F]',
-          active && 'before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-6 before:bg-[#09203F] before:rounded-r',
-          depth === 0 ? 'text-gray-700' : 'text-gray-600',
+          'hover:bg-white/[0.06]',
+          active && 'bg-white/[0.08] text-white',
+          active && 'before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-6 before:bg-gold-400 before:rounded-r',
+          depth === 0 ? 'text-stone-300' : 'text-stone-400',
           isCollapsed && 'justify-center px-2'
         )}
       >
         <IconComponent
           className={cn(
             'w-5 h-5 flex-shrink-0 transition-colors duration-200',
-            active ? 'text-[#09203F]' : 'text-gray-500'
+            active ? 'text-gold-300' : 'text-stone-400'
           )}
         />
         {!isCollapsed && (
           <>
             <span className="flex-1 text-sm font-medium truncate">{label}</span>
             {badge && (
-              <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-[#09203F] text-white rounded-full flex-shrink-0">
+              <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-gold-500 text-[#081A33] rounded-full flex-shrink-0">
                 {badge}
               </span>
             )}
@@ -146,7 +146,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
           </button>
 
           {!isCollapsed && isExpanded && (
-            <div className="ml-4 mt-1 space-y-1 border-l border-gray-200 pl-2">
+            <div className="ml-4 mt-1 space-y-1 border-l border-white/10 pl-2">
               {childItems!.map((child) => (
                 <NavItem
                   key={child.href}
@@ -170,39 +170,42 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-40',
+        'fixed left-0 top-0 h-screen bg-gradient-to-b from-[#081A33] via-[#092142] to-[#0B2348] border-r border-white/5 flex flex-col transition-all duration-300 z-40',
         isCollapsed ? 'w-[72px]' : 'w-[280px]'
       )}
     >
       {/* Header with Logo and Command Centre Text */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 h-20 flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-white/10 h-20 flex-shrink-0">
         {!isCollapsed && (
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-8 h-8 flex-shrink-0">
-              <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi Jewellers" className="w-full h-full object-contain" />
+              <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi Jewellers" className="w-full h-full object-contain brightness-0 invert opacity-95" />
             </div>
-            <span className="text-xs font-bold text-[#09203F] uppercase tracking-widest whitespace-nowrap">
-              Command Centre
-            </span>
+            <div className="min-w-0">
+              <p className="font-serif text-lg font-semibold text-white leading-none tracking-[0.14em]">RAFFI</p>
+              <p className="text-[10px] font-semibold text-gold-400/90 uppercase tracking-luxe whitespace-nowrap mt-1">
+                Command Centre
+              </p>
+            </div>
           </div>
         )}
         {isCollapsed && (
           <div className="w-full flex items-center justify-center">
             <div className="w-8 h-8">
-              <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi Jewellers" className="w-full h-full object-contain" />
+              <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi Jewellers" className="w-full h-full object-contain brightness-0 invert opacity-95" />
             </div>
           </div>
         )}
         {onToggle && (
           <button
             onClick={onToggle}
-            className="p-1 rounded hover:bg-gray-100 transition-colors ml-2 flex-shrink-0"
+            className="p-1 rounded hover:bg-white/10 transition-colors ml-2 flex-shrink-0"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
-              <Menu className="w-5 h-5 text-gray-600" />
+              <Menu className="w-5 h-5 text-stone-300" />
             ) : (
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
+              <ChevronLeft className="w-5 h-5 text-stone-300" />
             )}
           </button>
         )}
@@ -214,7 +217,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
           {filteredNav.map((section, index) => (
             <div key={`section-${index}`}>
               {section.label && !isCollapsed && (
-                <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <div className="px-4 py-2 text-[10px] font-semibold text-white/30 uppercase tracking-luxe mb-2">
                   {section.label}
                 </div>
               )}
@@ -246,23 +249,23 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
       </ScrollArea>
 
       {/* Footer with User Card */}
-      <div className="p-4 border-t border-gray-200 flex-shrink-0">
+      <div className="p-4 border-t border-white/10 flex-shrink-0">
         {!isCollapsed ? (
-          <div className="bg-gray-100 rounded-lg p-3 space-y-3">
+          <div className="bg-white/[0.06] border border-white/10 rounded-xl p-3 space-y-3">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 flex-shrink-0">
-                <div className="w-full h-full bg-[#09203F] flex items-center justify-center text-sm font-bold text-white">
+                <div className="w-full h-full bg-gold-500 flex items-center justify-center text-sm font-bold text-[#081A33]">
                   {getInitials(session?.user?.name)}
                 </div>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{session?.user?.name || 'User'}</p>
-                <p className="text-xs text-gray-600 truncate">{session?.user?.role || 'Member'}</p>
+                <p className="text-sm font-medium text-white truncate">{session?.user?.name || 'User'}</p>
+                <p className="text-xs text-stone-400 truncate">{session?.user?.role || 'Member'}</p>
               </div>
             </div>
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-stone-300 hover:text-white hover:bg-white/10 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
@@ -272,10 +275,10 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
           <div className="flex items-center justify-center">
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="p-2 rounded hover:bg-gray-100 transition-colors"
+              className="p-2 rounded hover:bg-white/10 transition-colors"
               title="Logout"
             >
-              <LogOut className="w-5 h-5 text-gray-600" />
+              <LogOut className="w-5 h-5 text-stone-300" />
             </button>
           </div>
         )}

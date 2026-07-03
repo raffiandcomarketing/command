@@ -52,7 +52,7 @@ const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
           isHorizontal && 'flex items-center justify-between gap-4'
         )}>
           <div className={cn(isHorizontal && 'flex-1')}>
-            <p className="text-sm font-medium text-gray-500 mb-2">
+            <p className="text-sm font-medium text-stone-500 mb-2">
               {label}
             </p>
             <div className="flex items-baseline gap-2">
@@ -67,13 +67,13 @@ const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
                   'flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded',
                   trend.direction === 'up' && 'text-emerald-700 bg-emerald-50',
                   trend.direction === 'down' && 'text-red-700 bg-red-50',
-                  trend.direction === 'neutral' && 'text-gray-600 bg-gray-100'
+                  trend.direction === 'neutral' && 'text-stone-600 bg-stone-100'
                 )}>
                   {trend.direction === 'up' && <TrendingUp className="h-3 w-3" />}
                   {trend.direction === 'down' && <TrendingDown className="h-3 w-3" />}
                   {trend.direction === 'neutral' && <Minus className="h-3 w-3" />}
                   <span>{trend.percentage}%</span>
-                  {trend.period && <span className="text-gray-500">{trend.period}</span>}
+                  {trend.period && <span className="text-stone-500">{trend.period}</span>}
                 </div>
               )}
             </div>
@@ -82,7 +82,7 @@ const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
           {icon && (
             <div className={cn(
               'p-3 rounded-lg',
-              'bg-gray-100',
+              'bg-stone-100',
               variantConfig[variant],
               isHorizontal && 'flex-shrink-0'
             )}>

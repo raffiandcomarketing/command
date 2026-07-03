@@ -132,17 +132,19 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="bg-gradient-to-br from-white via-gray-50 to-white border border-gray-100 rounded-2xl p-8 mb-2">
+      <div className="bg-gradient-to-br from-white via-ivory-50 to-ivory-100 border border-stone-200/70 rounded-2xl p-10 mb-2 shadow-luxe">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-3">{dashboardTitle}</h1>
-            <p className="text-gray-600 text-base">
+            <p className="eyebrow mb-3">Raffi Jewellers</p>
+            <h1 className="text-5xl font-semibold text-stone-900 mb-4">{dashboardTitle}</h1>
+            <div className="rule-gold mb-4" />
+            <p className="text-stone-600 text-base">
               Welcome back, <span className="font-semibold text-[#09203F]">{userName}</span>. Here&apos;s your command
               centre overview.
             </p>
           </div>
-          <div className="hidden lg:flex items-center justify-center w-16 h-16 rounded-xl border border-gray-200 bg-white">
-            <Diamond className="w-8 h-8 text-[#09203F]" />
+          <div className="hidden lg:flex items-center justify-center w-16 h-16 rounded-2xl border border-gold-200 bg-white shadow-luxe">
+            <Diamond className="w-8 h-8 text-gold-600" />
           </div>
         </div>
       </div>
@@ -166,7 +168,7 @@ export default function DashboardPage() {
           ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)
           : stats.map((stat) => (
               <Link key={stat.label} href={stat.href}>
-                <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer">
+                <Card className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer">
                   <div className="h-1" style={{ backgroundColor: stat.accentColor }} />
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
@@ -174,8 +176,8 @@ export default function DashboardPage() {
                         <stat.icon className="w-5 h-5" style={{ color: stat.accentColor }} />
                       </div>
                     </div>
-                    <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.label}</h3>
-                    <p className="text-3xl font-bold text-gray-900">{stat.value.toLocaleString()}</p>
+                    <h3 className="text-stone-500 text-sm font-medium mb-1">{stat.label}</h3>
+                    <p className="text-3xl font-bold text-stone-900">{stat.value.toLocaleString()}</p>
                   </div>
                 </Card>
               </Link>
@@ -185,19 +187,19 @@ export default function DashboardPage() {
       {/* Pipeline summary */}
       {data && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-            <h3 className="text-gray-500 text-sm font-medium mb-1">Open Pipeline Value</h3>
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm p-6">
+            <h3 className="text-stone-500 text-sm font-medium mb-1">Open Pipeline Value</h3>
             <p className="text-3xl font-bold text-[#09203F]">
               ${data.stats.pipelineValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-xs text-gray-500 mt-1">Leads and opportunities in the CRM</p>
+            <p className="text-xs text-stone-500 mt-1">Leads and opportunities in the CRM</p>
           </Card>
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-            <h3 className="text-gray-500 text-sm font-medium mb-1">Sales Closed (30 days)</h3>
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm p-6">
+            <h3 className="text-stone-500 text-sm font-medium mb-1">Sales Closed (30 days)</h3>
             <p className="text-3xl font-bold text-emerald-700">
               ${data.stats.salesValue30d.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-xs text-gray-500 mt-1">Deals moved to sale in the last 30 days</p>
+            <p className="text-xs text-stone-500 mt-1">Deals moved to sale in the last 30 days</p>
           </Card>
         </div>
       )}
@@ -205,9 +207,9 @@ export default function DashboardPage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="border-b border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-white">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="border-b border-stone-200 p-6 bg-gradient-to-r from-stone-50 to-white">
+              <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                 <div className="w-1 h-6 bg-[#09203F] rounded-full" />
                 Recent Activity
               </h2>
@@ -220,24 +222,24 @@ export default function DashboardPage() {
               </div>
             ) : activities.length === 0 ? (
               <div className="p-10 text-center">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-stone-500">
                   No activity yet. Actions like creating tasks, deals, and approvals will appear here.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-stone-100">
                 {activities.map((activity) => (
-                  <div key={activity.id} className="p-5 hover:bg-gray-50/50 transition-colors">
+                  <div key={activity.id} className="p-5 hover:bg-stone-50/50 transition-colors">
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border bg-blue-50 border-blue-200">
                         <Plus className="w-5 h-5 text-blue-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">
+                        <p className="text-sm text-stone-900">
                           <span className="font-medium">{activity.user?.name ?? 'Someone'}</span>{' '}
-                          <span className="text-gray-700">{activity.description}</span>
+                          <span className="text-stone-700">{activity.description}</span>
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(activity.createdAt)}</p>
+                        <p className="text-xs text-stone-500 mt-1">{formatRelativeTime(activity.createdAt)}</p>
                       </div>
                     </div>
                   </div>
@@ -248,14 +250,14 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="border-b border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-white">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="border-b border-stone-200 p-6 bg-gradient-to-r from-stone-50 to-white">
+              <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                 <div className="w-1 h-6 bg-[#09203F] rounded-full" />
                 Departments
               </h2>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-stone-100">
               {!data
                 ? Array.from({ length: 4 }).map((_, i) => (
                     <div key={i} className="p-4">
@@ -266,15 +268,15 @@ export default function DashboardPage() {
                     <Link
                       key={dept.id}
                       href={`/departments/${dept.slug}`}
-                      className="block p-4 hover:bg-gray-50/50 transition-colors"
+                      className="block p-4 hover:bg-stone-50/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-1">
-                        <h3 className="text-sm font-medium text-gray-900">{dept.name}</h3>
-                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                        <h3 className="text-sm font-medium text-stone-900">{dept.name}</h3>
+                        <ChevronRight className="w-4 h-4 text-stone-400" />
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <div className="flex items-center gap-4 text-xs text-stone-500">
                         <span>{dept.members} members</span>
-                        <span className="text-gray-300">•</span>
+                        <span className="text-stone-300">•</span>
                         <span>{dept.openTasks} open tasks</span>
                       </div>
                     </Link>
@@ -282,14 +284,14 @@ export default function DashboardPage() {
             </div>
           </Card>
 
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="border-b border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-white">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="border-b border-stone-200 p-6 bg-gradient-to-r from-stone-50 to-white">
+              <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                 <div className="w-1 h-6 bg-[#09203F] rounded-full" />
                 Recent Deals
               </h2>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-stone-100">
               {!data ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="p-4">
@@ -298,20 +300,20 @@ export default function DashboardPage() {
                 ))
               ) : data.recentDeals.length === 0 ? (
                 <div className="p-6 text-center">
-                  <p className="text-sm text-gray-500">No deals yet.</p>
+                  <p className="text-sm text-stone-500">No deals yet.</p>
                   <Link href="/crm" className="text-sm text-[#09203F] font-medium hover:underline">
                     Add your first deal →
                   </Link>
                 </div>
               ) : (
                 data.recentDeals.map((deal) => (
-                  <Link key={deal.id} href="/crm" className="block p-4 hover:bg-gray-50/50 transition-colors">
+                  <Link key={deal.id} href="/crm" className="block p-4 hover:bg-stone-50/50 transition-colors">
                     <div className="flex items-start justify-between mb-1">
-                      <h3 className="text-sm font-medium text-gray-900 truncate pr-2">{deal.title}</h3>
-                      <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <h3 className="text-sm font-medium text-stone-900 truncate pr-2">{deal.title}</h3>
+                      <ChevronRight className="w-4 h-4 text-stone-400 flex-shrink-0" />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-stone-500">
                         {deal.contact?.name ?? 'No contact'} · {STAGE_LABELS[deal.stage] ?? deal.stage}
                       </span>
                       <span className="text-sm font-semibold text-[#09203F]">${deal.value.toLocaleString()}</span>
@@ -326,29 +328,29 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-semibold text-stone-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium"
+            className="bg-white hover:bg-stone-50 text-stone-900 border border-stone-300 h-12 font-medium"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Task
           </Button>
           <Link href="/workflows" className="contents">
-            <Button className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium w-full">
+            <Button className="bg-white hover:bg-stone-50 text-stone-900 border border-stone-300 h-12 font-medium w-full">
               <GitBranch className="w-4 h-4 mr-2" />
               Start Workflow
             </Button>
           </Link>
           <Link href="/approvals?new=1" className="contents">
-            <Button className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 h-12 font-medium w-full">
+            <Button className="bg-white hover:bg-stone-50 text-stone-900 border border-stone-300 h-12 font-medium w-full">
               <FileCheck className="w-4 h-4 mr-2" />
               Request Approval
             </Button>
           </Link>
           <Link href="/kpis" className="contents">
-            <Button className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-12 w-full">
+            <Button className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium h-12 w-full">
               <TrendingUp className="w-4 h-4 mr-2" />
               View KPIs
             </Button>
@@ -384,13 +386,13 @@ export default function DashboardPage() {
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <label className="block text-sm font-medium text-stone-700 mb-2">Description</label>
             <textarea
               placeholder="Enter task description (optional)"
               value={taskForm.description}
               onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
               className={cn(
-                'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 transition-colors duration-200 min-h-24 resize-none',
+                'w-full px-4 py-2 rounded-lg bg-white border border-stone-300 text-stone-900 placeholder-stone-400 transition-colors duration-200 min-h-24 resize-none',
                 'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20'
               )}
             />
@@ -398,12 +400,12 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <label className="block text-sm font-medium text-stone-700 mb-2">Priority</label>
               <select
                 value={taskForm.priority}
                 onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
                 className={cn(
-                  'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900',
+                  'w-full px-4 py-2 rounded-lg bg-white border border-stone-300 text-stone-900',
                   'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20'
                 )}
               >
@@ -427,14 +429,14 @@ export default function DashboardPage() {
             <Button
               onClick={handleCreateTask}
               loading={saving}
-              className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-11"
+              className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium h-11"
             >
               Create Task
             </Button>
             <Button
               onClick={() => setIsModalOpen(false)}
               disabled={saving}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium h-11"
+              className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-900 font-medium h-11"
             >
               Cancel
             </Button>

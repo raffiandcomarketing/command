@@ -27,7 +27,7 @@ const typeMeta: Record<string, { color: string; icon: React.ComponentType<{ clas
   ALERT: { color: 'bg-red-500/10 text-red-600', icon: AlertCircle },
   WARNING: { color: 'bg-amber-500/10 text-amber-600', icon: AlertCircle },
   ESCALATION: { color: 'bg-red-600/10 text-red-700', icon: AlertCircle },
-  SYSTEM: { color: 'bg-gray-500/10 text-gray-600', icon: AlertCircle },
+  SYSTEM: { color: 'bg-stone-500/10 text-stone-600', icon: AlertCircle },
   INFO: { color: 'bg-blue-500/10 text-blue-600', icon: Bell },
 };
 
@@ -105,11 +105,11 @@ export default function NotificationsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Notifications</h1>
-          <p className="text-gray-500">Stay updated with all your task, approval, and system notifications.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">Notifications</h1>
+          <p className="text-stone-500">Stay updated with all your task, approval, and system notifications.</p>
         </div>
         {unreadCount > 0 && (
-          <Button variant="outline" className="bg-white border-gray-200 text-gray-900 hover:border-[#09203F]/50" onClick={() => void markAllRead()}>
+          <Button variant="outline" className="bg-white border-stone-200 text-stone-900 hover:border-[#09203F]/50" onClick={() => void markAllRead()}>
             <CheckCheck className="w-4 h-4 mr-2" />
             Mark all read ({unreadCount})
           </Button>
@@ -127,7 +127,7 @@ export default function NotificationsPage() {
             className={cn(
               selectedFilter === f.key
                 ? 'bg-[#09203F] text-white border-[#09203F] hover:bg-[#0a2651]'
-                : 'bg-white border-gray-200 text-gray-700 hover:border-[#09203F]/50'
+                : 'bg-white border-stone-200 text-stone-700 hover:border-[#09203F]/50'
             )}
           >
             {f.label}
@@ -159,8 +159,8 @@ export default function NotificationsPage() {
 
       {notifications !== null && filtered.length === 0 && !loadError && (
         <div className="text-center py-16">
-          <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">
+          <Bell className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+          <p className="text-stone-500">
             {selectedFilter === 'all'
               ? 'No notifications yet. Task assignments, approval decisions, and alerts will appear here.'
               : 'Nothing here for this filter.'}
@@ -169,7 +169,7 @@ export default function NotificationsPage() {
       )}
 
       {filtered.length > 0 && (
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <Card className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
           {filtered.map((n) => {
             const meta = typeMeta[n.type] ?? typeMeta.INFO;
             const Icon = meta.icon;
@@ -178,7 +178,7 @@ export default function NotificationsPage() {
                 key={n.id}
                 onClick={() => void markRead(n)}
                 className={cn(
-                  'p-6 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer',
+                  'p-6 border-b border-stone-200 last:border-0 hover:bg-stone-50 transition-colors cursor-pointer',
                   !n.isRead && 'bg-[#09203F]/5'
                 )}
               >
@@ -190,8 +190,8 @@ export default function NotificationsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="font-medium text-gray-900">{n.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{n.message}</p>
+                        <h3 className="font-medium text-stone-900">{n.title}</h3>
+                        <p className="text-sm text-stone-600 mt-1">{n.message}</p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {!n.isRead && <div className="w-2 h-2 rounded-full bg-[#09203F] mt-2" />}
@@ -201,13 +201,13 @@ export default function NotificationsPage() {
                             e.stopPropagation();
                             void remove(n);
                           }}
-                          className="p-1.5 rounded text-gray-300 hover:text-red-600 hover:bg-red-50"
+                          className="p-1.5 rounded text-stone-300 hover:text-red-600 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-3">{formatRelativeTime(n.createdAt)}</p>
+                    <p className="text-xs text-stone-500 mt-3">{formatRelativeTime(n.createdAt)}</p>
                   </div>
                 </div>
               </div>

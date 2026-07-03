@@ -172,7 +172,7 @@ export function classifyPriority(priority: TaskPriority): string {
     [TaskPriority.CRITICAL]: 'bg-red-200 text-red-900 border-red-400',
   };
 
-  return priorityColorMap[priority] || 'bg-gray-100 text-gray-800 border-gray-300';
+  return priorityColorMap[priority] || 'bg-stone-100 text-stone-800 border-stone-300';
 }
 
 /**
@@ -186,7 +186,7 @@ export function classifySeverity(severity: AlertSeverity): string {
     [AlertSeverity.CRITICAL]: 'bg-red-200 text-red-900 border-red-400',
   };
 
-  return severityColorMap[severity] || 'bg-gray-100 text-gray-800 border-gray-300';
+  return severityColorMap[severity] || 'bg-stone-100 text-stone-800 border-stone-300';
 }
 
 // ==================== VALIDATION UTILITIES ====================

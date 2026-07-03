@@ -45,8 +45,8 @@ const roleBadge: Record<string, string> = {
   ADMIN: 'bg-red-500/10 text-red-700 border-red-200',
   EXECUTIVE: 'bg-purple-500/10 text-purple-700 border-purple-200',
   MANAGER: 'bg-blue-500/10 text-blue-700 border-blue-200',
-  MEMBER: 'bg-gray-500/10 text-gray-700 border-gray-200',
-  VIEWER: 'bg-gray-400/10 text-gray-500 border-gray-200',
+  MEMBER: 'bg-stone-500/10 text-stone-700 border-stone-200',
+  VIEWER: 'bg-stone-400/10 text-stone-500 border-stone-200',
 };
 
 interface FormState {
@@ -195,10 +195,10 @@ export default function AdminUsersPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Users</h1>
-          <p className="text-gray-500">Manage accounts, roles, and department assignments.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">Users</h1>
+          <p className="text-stone-500">Manage accounts, roles, and department assignments.</p>
         </div>
-        <Button onClick={openCreate} className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium">
+        <Button onClick={openCreate} className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium">
           <Plus className="w-4 h-4 mr-2" />
           Add User
         </Button>
@@ -227,21 +227,21 @@ export default function AdminUsersPage() {
 
       {users !== null && users.length === 0 && !loadError && (
         <div className="text-center py-16">
-          <UsersIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No users found.</p>
+          <UsersIcon className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+          <p className="text-stone-500">No users found.</p>
         </div>
       )}
 
       {users !== null && users.length > 0 && (
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900">All Users ({users.length})</h2>
+        <Card className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="border-b border-stone-200 p-6">
+            <h2 className="text-lg font-semibold text-stone-900">All Users ({users.length})</h2>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-stone-100">
             {users.map((u) => {
               const primary = u.userDepartments.find((d) => d.isPrimary) ?? u.userDepartments[0];
               return (
-                <div key={u.id} className={cn('flex items-center justify-between p-5 hover:bg-gray-50 transition-colors', !u.isActive && 'opacity-60')}>
+                <div key={u.id} className={cn('flex items-center justify-between p-5 hover:bg-stone-50 transition-colors', !u.isActive && 'opacity-60')}>
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="w-10 h-10 rounded-full bg-[#09203F]/10 flex items-center justify-center text-sm font-semibold text-[#09203F] flex-shrink-0">
                       {u.name
@@ -253,21 +253,21 @@ export default function AdminUsersPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-900">{u.name}</p>
+                        <p className="font-medium text-stone-900">{u.name}</p>
                         <Badge variant="outline" className={roleBadge[u.role] ?? ''}>
                           <Shield className="w-3 h-3 mr-1" />
                           {u.role.toLowerCase()}
                         </Badge>
                         {!u.isActive && (
-                          <Badge variant="outline" className="bg-gray-200 text-gray-500 border-gray-300">
+                          <Badge variant="outline" className="bg-stone-200 text-stone-500 border-stone-300">
                             inactive
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-stone-500 truncate">
                         {u.email}
                         {primary && (
-                          <span className="text-gray-400">
+                          <span className="text-stone-400">
                             {' '}
                             · {primary.role.title}, {primary.department.name}
                           </span>
@@ -277,7 +277,7 @@ export default function AdminUsersPage() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Button size="sm" variant="ghost" title="Edit user" onClick={() => openEdit(u)}>
-                      <Edit2 className="w-4 h-4 text-gray-500" />
+                      <Edit2 className="w-4 h-4 text-stone-500" />
                     </Button>
                     <Button
                       size="sm"
@@ -349,7 +349,7 @@ export default function AdminUsersPage() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
               {form.id ? 'Save Changes' : 'Create User'}
             </Button>
             <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving} className="flex-1">

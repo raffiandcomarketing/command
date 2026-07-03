@@ -10,7 +10,7 @@ const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
     <div
       ref={ref}
       className={cn(
-        'bg-gray-200 rounded-lg animate-pulse',
+        'bg-stone-200/70 rounded-xl animate-pulse',
         className
       )}
       {...props}

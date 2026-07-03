@@ -32,15 +32,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const variantClasses = {
       primary:
-        'bg-[#09203F] text-white hover:bg-[#0d2a4f] font-semibold shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed',
+        'bg-[#0A2245] text-white hover:bg-[#0E2C55] font-medium shadow-luxe hover:shadow-luxe-md disabled:opacity-50 disabled:cursor-not-allowed',
       secondary:
-        'bg-gray-100 text-gray-900 hover:bg-gray-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed',
+        'bg-stone-100 text-stone-800 hover:bg-stone-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed',
       outline:
-        'border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed',
+        'border border-stone-300 bg-white hover:border-gold-400 hover:bg-gold-50/60 text-stone-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed',
       ghost:
-        'bg-transparent hover:bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed',
+        'bg-transparent hover:bg-stone-100 text-stone-600 hover:text-stone-800 disabled:opacity-50 disabled:cursor-not-allowed',
       destructive:
-        'bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed',
+        'bg-red-700 hover:bg-red-800 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed',
     }
 
     const sizeClasses = {
@@ -50,7 +50,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     const composedClassName = cn(
-      'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#09203F] focus:ring-offset-2 focus:ring-offset-white',
+      'inline-flex items-center justify-center font-medium transition-all duration-200 active:translate-y-px focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-100',
       variantClasses[variant],
       sizeClasses[size],
       className
@@ -66,12 +66,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={cn(
-          'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#09203F] focus:ring-offset-2 focus:ring-offset-white',
-          variantClasses[variant],
-          sizeClasses[size],
-          className
-        )}
+        className={composedClassName}
         disabled={disabled || loading}
         {...props}
       >

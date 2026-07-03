@@ -45,10 +45,10 @@ const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
     }
 
     const arrowClasses = {
-      top: 'top-full left-1/2 -translate-x-1/2 border-t-gray-900',
-      right: 'right-full top-1/2 -translate-y-1/2 border-r-gray-900',
-      bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-gray-900',
-      left: 'left-full top-1/2 -translate-y-1/2 border-l-gray-900',
+      top: 'top-full left-1/2 -translate-x-1/2 border-t-stone-900',
+      right: 'right-full top-1/2 -translate-y-1/2 border-r-stone-900',
+      bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-stone-900',
+      left: 'left-full top-1/2 -translate-y-1/2 border-l-stone-900',
     }
 
     return (
@@ -64,7 +64,7 @@ const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
         {visible && (
           <div
             className={cn(
-              'absolute z-50 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap pointer-events-none',
+              'absolute z-50 px-3 py-2 bg-stone-900 text-white text-xs font-medium rounded-lg whitespace-nowrap pointer-events-none',
               positionClasses[side],
               className
             )}
@@ -72,7 +72,7 @@ const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
             {content}
             <div
               className={cn(
-                'absolute w-2 h-2 bg-gray-900 rotate-45',
+                'absolute w-2 h-2 bg-stone-900 rotate-45',
                 arrowClasses[side]
               )}
             />

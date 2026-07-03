@@ -128,8 +128,8 @@ export default function IntegrationsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Integrations</h1>
-          <p className="text-gray-500">Configure connections to external systems.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">Integrations</h1>
+          <p className="text-stone-500">Configure connections to external systems.</p>
         </div>
         <Button
           onClick={() => {
@@ -137,14 +137,14 @@ export default function IntegrationsPage() {
             setFormError(null);
             setModalOpen(true);
           }}
-          className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium"
+          className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Integration
         </Button>
       </div>
 
-      <div className="flex items-start gap-3 text-sm text-gray-600 bg-blue-50 border border-blue-100 rounded-lg p-4">
+      <div className="flex items-start gap-3 text-sm text-stone-600 bg-blue-50 border border-blue-100 rounded-lg p-4">
         <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
         <p>
           Integrations are stored as configuration today; statuses shown here are real. Live data sync (Lightspeed,
@@ -177,7 +177,7 @@ export default function IntegrationsPage() {
       {integrations !== null && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {integrations.map((i) => (
-            <Card key={i.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <Card key={i.id} className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
               <div className="p-6 space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -185,8 +185,8 @@ export default function IntegrationsPage() {
                       <Plug className="w-5 h-5 text-[#09203F]" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{i.name}</h3>
-                      <p className="text-xs text-gray-500">
+                      <h3 className="font-semibold text-stone-900">{i.name}</h3>
+                      <p className="text-xs text-stone-500">
                         {i.provider} · {i.type.toLowerCase()}
                       </p>
                     </div>
@@ -196,18 +196,18 @@ export default function IntegrationsPage() {
                     className={
                       i.status === 'configured'
                         ? 'bg-blue-500/10 text-blue-700 border-blue-200'
-                        : 'bg-gray-500/10 text-gray-500 border-gray-200'
+                        : 'bg-stone-500/10 text-stone-500 border-stone-200'
                     }
                   >
                     {i.status}
                   </Badge>
                 </div>
 
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-stone-400">
                   {i.lastSyncAt ? `Last sync ${new Date(i.lastSyncAt).toLocaleString()}` : 'Never synced — adapter pending (Sprint 9)'}
                 </p>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
                   <Button size="sm" variant="outline" disabled={busyId === i.id} onClick={() => void trySync(i)}>
                     <RefreshCcw className="w-4 h-4 mr-1.5" />
                     Sync
@@ -226,15 +226,15 @@ export default function IntegrationsPage() {
 
           {/* Suggested roadmap providers */}
           {SUGGESTED.filter((s) => !integrations.some((i) => i.provider.toLowerCase() === s.provider.toLowerCase())).map((s) => (
-            <Card key={s.provider} className="bg-gray-50/60 border border-dashed border-gray-300 rounded-xl">
+            <Card key={s.provider} className="bg-stone-50/60 border border-dashed border-stone-300 rounded-xl">
               <div className="p-6 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
-                    <Plug className="w-5 h-5 text-gray-400" />
+                  <div className="w-10 h-10 rounded-lg bg-white border border-stone-200 flex items-center justify-center">
+                    <Plug className="w-5 h-5 text-stone-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-700">{s.provider}</h3>
-                    <p className="text-xs text-gray-500">{s.note}</p>
+                    <h3 className="font-semibold text-stone-700">{s.provider}</h3>
+                    <p className="text-xs text-stone-500">{s.note}</p>
                   </div>
                 </div>
                 <Button
@@ -272,7 +272,7 @@ export default function IntegrationsPage() {
           <Input label="Provider *" value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value })} placeholder="e.g., Lightspeed" />
           <Select label="Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} options={TYPES.map((t) => ({ value: t, label: t.toLowerCase() }))} />
           <div className="flex gap-3 pt-2">
-            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
               Save
             </Button>
             <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving} className="flex-1">

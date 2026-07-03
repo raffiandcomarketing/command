@@ -14,7 +14,7 @@ export default function DashboardLayout({
 
   return (
     <ToastProvider>
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       {/* Sidebar */}
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
@@ -24,7 +24,7 @@ export default function DashboardLayout({
         style={{ marginLeft: sidebarCollapsed ? '72px' : '280px' }}
       >
         {/* Header */}
-        <Header />
+        <Header sidebarWidth={sidebarCollapsed ? 72 : 280} />
 
         {/* Page Content */}
         <main className="pt-20 p-8">

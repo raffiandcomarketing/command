@@ -23,6 +23,26 @@ const config: Config = {
           900: '#051628',
           DEFAULT: '#09203F',
         },
+        gold: {
+          50: '#FBF8F1',
+          100: '#F5EEDF',
+          200: '#EADFC3',
+          300: '#DECBA0',
+          400: '#CDB077',
+          500: '#BC9A5F',
+          600: '#A8854C',
+          700: '#8A6C3C',
+          800: '#6F5630',
+          900: '#5A4526',
+          DEFAULT: '#BC9A5F',
+        },
+        ivory: {
+          50: '#FDFCFA',
+          100: '#FAF8F4',
+          200: '#F4F1EA',
+          300: '#ECE7DD',
+          DEFAULT: '#FAF8F4',
+        },
         department: {
           sales: '#B3D9FF',
           'sales-dark': '#3b82f6',
@@ -39,7 +59,8 @@ const config: Config = {
       fontFamily: {
         inter: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        serif: ['var(--font-serif)'],
+        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       spacing: {
         '128': '32rem',
@@ -50,6 +71,12 @@ const config: Config = {
       boxShadow: {
         'luxury': '0 20px 25px -5px rgba(9, 32, 63, 0.08)',
         'luxury-lg': '0 25px 50px -12px rgba(9, 32, 63, 0.12)',
+        'luxe': '0 1px 2px rgba(9, 32, 63, 0.04), 0 8px 24px -8px rgba(9, 32, 63, 0.08)',
+        'luxe-md': '0 2px 4px rgba(9, 32, 63, 0.05), 0 16px 40px -12px rgba(9, 32, 63, 0.14)',
+        'luxe-gold': '0 1px 2px rgba(188, 154, 95, 0.12), 0 8px 24px -8px rgba(188, 154, 95, 0.25)',
+      },
+      letterSpacing: {
+        luxe: '0.18em',
       },
       animation: {
         'pulse-subtle': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',

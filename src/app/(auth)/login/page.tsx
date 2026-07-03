@@ -56,28 +56,29 @@ export default function LoginPage() {
             <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi" className="h-12 w-12 brightness-0 invert" />
             <div>
               <h1 className="text-white text-xl font-bold tracking-[0.25em]">RAFFI</h1>
-              <p className="text-white/40 text-xs tracking-[0.2em] uppercase">Jewellers</p>
+              <p className="text-gold-400/80 text-xs tracking-[0.25em] uppercase">Jewellers</p>
             </div>
           </div>
-          <h2 className="text-white/90 text-4xl font-light leading-tight mb-6">
+          <h2 className="font-serif text-white text-6xl font-medium leading-[1.05] mb-4">
             Command<br />Centre
           </h2>
+          <div className="h-px w-14 bg-gold-400/80 mb-6" />
           <p className="text-white/50 text-sm leading-relaxed">
             Your luxury retail operating system. Manage departments, workflows, approvals, and KPIs from a single dashboard.
           </p>
           <div className="mt-16 flex gap-8">
             <div>
-              <p className="text-white/90 text-2xl font-light">18</p>
+              <p className="font-serif text-gold-200 text-3xl">18</p>
               <p className="text-white/40 text-xs uppercase tracking-wider mt-1">Departments</p>
             </div>
             <div className="w-px bg-white/10" />
             <div>
-              <p className="text-white/90 text-2xl font-light">5</p>
+              <p className="font-serif text-gold-200 text-3xl">5</p>
               <p className="text-white/40 text-xs uppercase tracking-wider mt-1">Role levels</p>
             </div>
             <div className="w-px bg-white/10" />
             <div>
-              <p className="text-white/90 text-2xl font-light">24/7</p>
+              <p className="font-serif text-gold-200 text-3xl">24/7</p>
               <p className="text-white/40 text-xs uppercase tracking-wider mt-1">Automation</p>
             </div>
           </div>
@@ -85,7 +86,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right panel - login form */}
-      <div className="flex-1 flex items-center justify-center bg-white px-6 py-12">
+      <div className="flex-1 flex items-center justify-center bg-ivory-50 px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center justify-center gap-3 mb-12">
             <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi" className="h-8 w-8" />
@@ -93,13 +94,13 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-10">
-            <h2 className="text-[#09203F] text-2xl font-semibold">Welcome back</h2>
-            <p className="text-gray-400 text-sm mt-2">Sign in to your account to continue</p>
+            <h2 className="font-serif text-[#09203F] text-4xl font-semibold">Welcome back</h2>
+            <p className="text-stone-400 text-sm mt-3">Sign in to your account to continue</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+              <label htmlFor="email" className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
                 Email address
               </label>
               <input
@@ -109,13 +110,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#09203F]/20 focus:border-[#09203F]/40 transition-all disabled:opacity-50"
+                className="w-full px-4 py-3 bg-white border border-stone-200 rounded-lg text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-gold-500/25 focus:border-gold-500/60 transition-all disabled:opacity-50"
                 autoComplete="email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+              <label htmlFor="password" className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
                 Password
               </label>
               <input
@@ -125,7 +126,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#09203F]/20 focus:border-[#09203F]/40 transition-all disabled:opacity-50"
+                className="w-full px-4 py-3 bg-white border border-stone-200 rounded-lg text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-gold-500/25 focus:border-gold-500/60 transition-all disabled:opacity-50"
                 autoComplete="current-password"
               />
             </div>
@@ -142,14 +143,14 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-[#09203F] text-white text-sm font-medium rounded-lg hover:bg-[#0a2848] active:bg-[#071a30] focus:outline-none focus:ring-2 focus:ring-[#09203F]/50 focus:ring-offset-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              className="w-full py-3 px-4 bg-[#0A2245] text-white text-sm font-medium tracking-wide rounded-lg hover:bg-[#0E2C55] shadow-luxe hover:shadow-luxe-md focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:ring-offset-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-2"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <div className="mt-10 pt-8 border-t border-gray-100">
-            <p className="text-xs text-gray-300 text-center tracking-wide">
+          <div className="mt-10 pt-8 border-t border-stone-200/70">
+            <p className="text-[10px] text-stone-400/80 text-center tracking-luxe uppercase">
               RAFFI JEWELLERS · LUXURY RETAIL OPERATING SYSTEM
             </p>
           </div>

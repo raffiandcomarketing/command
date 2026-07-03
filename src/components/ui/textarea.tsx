@@ -14,14 +14,14 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-stone-700 mb-2">
             {label}
           </label>
         )}
         <textarea
           ref={ref}
           className={cn(
-            'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 transition-colors duration-200',
+            'w-full px-4 py-2 rounded-lg bg-white border border-stone-300 text-stone-900 placeholder-stone-400 transition-colors duration-200',
             'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'resize-vertical min-h-24',
@@ -34,7 +34,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           <p className="mt-1.5 text-xs font-medium text-red-600">{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1.5 text-xs text-gray-500">{helperText}</p>
+          <p className="mt-1.5 text-xs text-stone-500">{helperText}</p>
         )}
       </div>
     )

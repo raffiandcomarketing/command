@@ -21,7 +21,7 @@ interface ActivityTimelineProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const colorConfig = {
-  default: 'bg-gray-300',
+  default: 'bg-stone-300',
   success: 'bg-emerald-500',
   warning: 'bg-amber-500',
   danger: 'bg-red-500',
@@ -51,16 +51,16 @@ const ActivityTimeline = forwardRef<HTMLDivElement, ActivityTimelineProps>(
                 )}
               </div>
               {index !== items.length - 1 && (
-                <div className="w-0.5 h-12 bg-gray-200 mt-2" />
+                <div className="w-0.5 h-12 bg-stone-200 mt-2" />
               )}
             </div>
 
             <div className="flex-1 pt-1">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-stone-900">
                 {item.name && <span>{item.name}: </span>}
-                <span className="text-gray-600">{item.description}</span>
+                <span className="text-stone-600">{item.description}</span>
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-stone-400 mt-1">
                 {formatRelativeTime(item.timestamp)}
               </p>
             </div>

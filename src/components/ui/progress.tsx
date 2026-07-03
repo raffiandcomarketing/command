@@ -42,7 +42,7 @@ const Progress = forwardRef<HTMLDivElement, ProgressProps>(
     return (
       <div ref={ref} className={cn('w-full', className)} {...props}>
         <div className="flex items-center justify-between mb-2">
-          <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 flex-1 bg-stone-200 rounded-full overflow-hidden">
             <div
               className={cn(
                 'h-full transition-all duration-300',
@@ -52,7 +52,7 @@ const Progress = forwardRef<HTMLDivElement, ProgressProps>(
             />
           </div>
           {showLabel && (
-            <span className="ml-3 text-sm font-medium text-gray-700">
+            <span className="ml-3 text-sm font-medium text-stone-700">
               {Math.round(percentage)}%
             </span>
           )}

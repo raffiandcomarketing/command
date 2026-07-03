@@ -60,8 +60,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={cn(
-              'flex items-start gap-3 rounded-lg border p-4 shadow-lg bg-white animate-in',
-              t.kind === 'success' && 'border-emerald-200',
+              'flex items-start gap-3 rounded-xl border p-4 shadow-luxe-md bg-white animate-in',
+              t.kind === 'success' && 'border-emerald-200/80',
               t.kind === 'error' && 'border-red-200',
               t.kind === 'info' && 'border-blue-200'
             )}
@@ -69,8 +69,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             {t.kind === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />}
             {t.kind === 'error' && <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />}
             {t.kind === 'info' && <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />}
-            <p className="text-sm text-gray-800 flex-1">{t.message}</p>
-            <button onClick={() => dismiss(t.id)} className="text-gray-400 hover:text-gray-600" aria-label="Dismiss">
+            <p className="text-sm text-stone-800 flex-1">{t.message}</p>
+            <button onClick={() => dismiss(t.id)} className="text-stone-400 hover:text-stone-600" aria-label="Dismiss">
               <X className="w-4 h-4" />
             </button>
           </div>

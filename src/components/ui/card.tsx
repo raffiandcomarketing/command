@@ -10,7 +10,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     <div
       ref={ref}
       className={cn(
-        'rounded-xl bg-white border border-gray-200 shadow-sm',
+        'rounded-2xl bg-white border border-stone-200/80 shadow-luxe',
         className
       )}
       {...props}
@@ -26,7 +26,7 @@ const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('flex flex-col space-y-1.5 p-6 border-b border-gray-200', className)}
+      className={cn('flex flex-col space-y-1.5 p-6 border-b border-stone-100', className)}
       {...props}
     />
   )
@@ -40,7 +40,7 @@ const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ className, ...props }, ref) => (
     <h2
       ref={ref}
-      className={cn('text-xl font-semibold text-gray-900', className)}
+      className={cn('text-xl font-semibold text-stone-900', className)}
       {...props}
     />
   )
@@ -54,7 +54,7 @@ const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
   ({ className, ...props }, ref) => (
     <p
       ref={ref}
-      className={cn('text-sm text-gray-500', className)}
+      className={cn('text-sm text-stone-500', className)}
       {...props}
     />
   )

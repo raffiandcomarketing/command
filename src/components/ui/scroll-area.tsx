@@ -23,11 +23,11 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
           scrollClasses[orientation],
           '[&::-webkit-scrollbar]:w-2',
           '[&::-webkit-scrollbar]:h-2',
-          '[&::-webkit-scrollbar-track]:bg-gray-100',
+          '[&::-webkit-scrollbar-track]:bg-stone-100',
           '[&::-webkit-scrollbar-track]:rounded-lg',
-          '[&::-webkit-scrollbar-thumb]:bg-gray-300',
+          '[&::-webkit-scrollbar-thumb]:bg-stone-300',
           '[&::-webkit-scrollbar-thumb]:rounded-lg',
-          '[&::-webkit-scrollbar-thumb:hover]:bg-gray-400',
+          '[&::-webkit-scrollbar-thumb:hover]:bg-stone-400',
           className
         )}
         {...props}

@@ -39,7 +39,7 @@ const typeColors: Record<string, string> = {
   WORKFLOW: 'bg-yellow-500/10 text-yellow-700 border-yellow-200',
   DOCUMENT: 'bg-pink-500/10 text-pink-700 border-pink-200',
   ACCESS: 'bg-orange-500/10 text-orange-700 border-orange-200',
-  GENERAL: 'bg-gray-500/10 text-gray-700 border-gray-200',
+  GENERAL: 'bg-stone-500/10 text-stone-700 border-stone-200',
 };
 
 const priorityColors: Record<string, string> = {
@@ -186,17 +186,17 @@ function ApprovalsPageInner() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Approvals</h1>
-          <p className="text-gray-500">Review and act on approval requests across the business.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">Approvals</h1>
+          <p className="text-stone-500">Review and act on approval requests across the business.</p>
         </div>
-        <Button onClick={() => setNewOpen(true)} className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium">
+        <Button onClick={() => setNewOpen(true)} className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium">
           <Plus className="w-4 h-4 mr-2" />
           Request Approval
         </Button>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 bg-white rounded-t-lg overflow-x-auto">
+      <div className="flex border-b border-stone-200 bg-white rounded-t-lg overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -206,7 +206,7 @@ function ApprovalsPageInner() {
             }}
             className={cn(
               'flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors',
-              tab === t.key ? 'border-[#09203F] text-[#09203F]' : 'border-transparent text-gray-500 hover:text-gray-800'
+              tab === t.key ? 'border-[#09203F] text-[#09203F]' : 'border-transparent text-stone-500 hover:text-stone-800'
             )}
           >
             {t.icon}
@@ -238,8 +238,8 @@ function ApprovalsPageInner() {
 
       {approvals !== null && approvals.length === 0 && !loadError && (
         <div className="text-center py-16">
-          <FileCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-1">
+          <FileCheck className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+          <p className="text-stone-500 mb-1">
             {tab === 'pending' && 'No pending approvals — you’re all caught up.'}
             {tab === 'approved' && 'No approved requests yet.'}
             {tab === 'rejected' && 'No rejected requests.'}
@@ -256,12 +256,12 @@ function ApprovalsPageInner() {
 
       <div className="space-y-4">
         {(approvals ?? []).map((a) => (
-          <Card key={a.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <Card key={a.id} className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{a.title}</h3>
+                    <h3 className="text-lg font-semibold text-stone-900">{a.title}</h3>
                     <Badge variant="outline" className={typeColors[a.type] ?? typeColors.GENERAL}>
                       {a.type.toLowerCase()}
                     </Badge>
@@ -274,34 +274,34 @@ function ApprovalsPageInner() {
                         className={cn(
                           a.status === 'APPROVED' && 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
                           a.status === 'REJECTED' && 'bg-red-500/10 text-red-700 border-red-200',
-                          (a.status === 'CANCELLED' || a.status === 'ESCALATED') && 'bg-gray-500/10 text-gray-600 border-gray-200'
+                          (a.status === 'CANCELLED' || a.status === 'ESCALATED') && 'bg-stone-500/10 text-stone-600 border-stone-200'
                         )}
                       >
                         {a.status.toLowerCase()}
                       </Badge>
                     )}
                   </div>
-                  {a.description && <p className="text-sm text-gray-500 mb-3">{a.description}</p>}
-                  <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+                  {a.description && <p className="text-sm text-stone-500 mb-3">{a.description}</p>}
+                  <div className="flex items-center gap-4 text-xs text-stone-500 flex-wrap">
                     <span>
-                      Requested by <span className="font-medium text-gray-700">{a.requester?.name ?? 'Unknown'}</span>
+                      Requested by <span className="font-medium text-stone-700">{a.requester?.name ?? 'Unknown'}</span>
                     </span>
                     {a.department && <span>· {a.department.name}</span>}
                     <span>· {formatDate(a.createdAt)}</span>
                     {a.dueDate && <span>· due {formatDate(a.dueDate)}</span>}
                     {a.approver && a.status === 'PENDING' && (
                       <span>
-                        · awaiting <span className="font-medium text-gray-700">{a.approver.name}</span>
+                        · awaiting <span className="font-medium text-stone-700">{a.approver.name}</span>
                       </span>
                     )}
                     {a.approver && a.status !== 'PENDING' && a.decidedAt && (
                       <span>
-                        · decided by <span className="font-medium text-gray-700">{a.approver.name}</span> on {formatDate(a.decidedAt)}
+                        · decided by <span className="font-medium text-stone-700">{a.approver.name}</span> on {formatDate(a.decidedAt)}
                       </span>
                     )}
                   </div>
                   {a.comments && (
-                    <p className="mt-3 text-sm text-gray-600 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                    <p className="mt-3 text-sm text-stone-600 bg-stone-50 border border-stone-100 rounded-lg px-3 py-2">
                       “{a.comments}”
                     </p>
                   )}
@@ -345,14 +345,14 @@ function ApprovalsPageInner() {
                       variant="ghost"
                       disabled={busyId === a.id}
                       onClick={() => void cancelRequest(a)}
-                      className="text-gray-500"
+                      className="text-stone-500"
                     >
                       <XCircle className="w-4 h-4 mr-1.5" />
                       Cancel
                     </Button>
                   )}
                   {a.status === 'PENDING' && a.requester?.id === myId && (
-                    <p className="text-[11px] text-gray-400 text-center max-w-[130px]">You cannot decide your own request</p>
+                    <p className="text-[11px] text-stone-400 text-center max-w-[130px]">You cannot decide your own request</p>
                   )}
                 </div>
               </div>
@@ -376,13 +376,13 @@ function ApprovalsPageInner() {
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">{decisionError}</div>
           )}
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">
+            <label className="text-sm font-medium text-stone-700 block mb-2">
               {decision?.kind === 'APPROVED' ? 'Comment (optional)' : 'Reason *'}
             </label>
             <textarea
               value={decisionComment}
               onChange={(e) => setDecisionComment(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-24 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg min-h-24 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
               placeholder={decision?.kind === 'APPROVED' ? 'Add context for the requester…' : 'Explain why this is rejected…'}
             />
           </div>
@@ -421,11 +421,11 @@ function ApprovalsPageInner() {
           )}
           <Input label="Title *" placeholder="e.g., Q3 window display budget" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Description</label>
+            <label className="text-sm font-medium text-stone-700 block mb-2">Description</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-20 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg min-h-20 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -442,7 +442,7 @@ function ApprovalsPageInner() {
             <Input label="Due Date" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
           </div>
           <div className="flex gap-3 pt-2">
-            <Button onClick={submitNew} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white">
+            <Button onClick={submitNew} loading={saving} className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
               Submit Request
             </Button>
             <Button variant="outline" onClick={() => setNewOpen(false)} disabled={saving} className="flex-1">

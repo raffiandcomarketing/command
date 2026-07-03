@@ -117,8 +117,8 @@ export default function AdminRolesPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Roles</h1>
-          <p className="text-gray-500">Department role structure used for assignments and RBAC.</p>
+          <h1 className="text-4xl font-semibold text-stone-900 mb-2">Roles</h1>
+          <p className="text-stone-500">Department role structure used for assignments and RBAC.</p>
         </div>
         <Button
           onClick={() => {
@@ -126,7 +126,7 @@ export default function AdminRolesPage() {
             setFormError(null);
             setModalOpen(true);
           }}
-          className="bg-[#09203F] hover:bg-[#0a2651] text-white font-medium"
+          className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Role
@@ -156,27 +156,27 @@ export default function AdminRolesPage() {
 
       <div className="space-y-3">
         {byDept.map(({ dept, roles: deptRoles }) => (
-          <Card key={dept.id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <Card key={dept.id} className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
             <button
               onClick={() => setExpanded(expanded === dept.id ? null : dept.id)}
-              className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-between p-5 hover:bg-stone-50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <h3 className="font-semibold text-gray-900">{dept.name}</h3>
-                <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
+                <h3 className="font-semibold text-stone-900">{dept.name}</h3>
+                <Badge variant="outline" className="bg-stone-100 text-stone-600 border-stone-200">
                   {deptRoles.length} role{deptRoles.length === 1 ? '' : 's'}
                 </Badge>
               </div>
-              <ChevronDown className={cn('w-5 h-5 text-gray-400 transition-transform', expanded === dept.id && 'rotate-180')} />
+              <ChevronDown className={cn('w-5 h-5 text-stone-400 transition-transform', expanded === dept.id && 'rotate-180')} />
             </button>
             {expanded === dept.id && (
-              <div className="border-t border-gray-100 divide-y divide-gray-50">
-                {deptRoles.length === 0 && <p className="p-5 text-sm text-gray-400">No roles in this department yet.</p>}
+              <div className="border-t border-stone-100 divide-y divide-stone-50">
+                {deptRoles.length === 0 && <p className="p-5 text-sm text-stone-400">No roles in this department yet.</p>}
                 {deptRoles.map((r) => (
-                  <div key={r.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/60">
+                  <div key={r.id} className="flex items-center justify-between px-5 py-3 hover:bg-stone-50/60">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{r.title}</p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <p className="text-sm font-medium text-stone-900">{r.title}</p>
+                      <p className="text-xs text-stone-500 flex items-center gap-1">
                         <Users className="w-3 h-3" />
                         {r._count.userDepartments} member{r._count.userDepartments === 1 ? '' : 's'}
                       </p>
@@ -191,7 +191,7 @@ export default function AdminRolesPage() {
                           setModalOpen(true);
                         }}
                       >
-                        <Edit2 className="w-4 h-4 text-gray-500" />
+                        <Edit2 className="w-4 h-4 text-stone-500" />
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => void remove(r)}>
                         <Trash2 className="w-4 h-4 text-red-500" />
@@ -226,15 +226,15 @@ export default function AdminRolesPage() {
             />
           )}
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Description</label>
+            <label className="text-sm font-medium text-stone-700 block mb-2">Description</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-16 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg min-h-16 resize-none focus:outline-none focus:ring-2 focus:ring-[#09203F]/20"
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <Button onClick={submit} loading={saving} className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white">
+            <Button onClick={submit} loading={saving} className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white">
               {form.id ? 'Save Changes' : 'Create Role'}
             </Button>
             <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving} className="flex-1">

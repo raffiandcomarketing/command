@@ -7,7 +7,7 @@ interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {}
 
 const Table = forwardRef<HTMLTableElement, TableProps>(
   ({ className, ...props }, ref) => (
-    <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+    <div className="w-full overflow-x-auto rounded-lg border border-stone-200">
       <table
         ref={ref}
         className={cn('w-full text-sm', className)}
@@ -25,7 +25,7 @@ const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(
   ({ className, ...props }, ref) => (
     <thead
       ref={ref}
-      className={cn('bg-gray-50 border-b border-gray-200', className)}
+      className={cn('bg-stone-50 border-b border-stone-200', className)}
       {...props}
     />
   )
@@ -37,7 +37,7 @@ interface TableBodyProps extends React.HTMLAttributes<HTMLTableSectionElement> {
 
 const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(
   ({ className, ...props }, ref) => (
-    <tbody ref={ref} className={cn('divide-y divide-gray-100', className)} {...props} />
+    <tbody ref={ref} className={cn('divide-y divide-stone-100', className)} {...props} />
   )
 )
 
@@ -49,7 +49,7 @@ const TableFooter = forwardRef<HTMLTableSectionElement, TableFooterProps>(
   ({ className, ...props }, ref) => (
     <tfoot
       ref={ref}
-      className={cn('bg-gray-50 border-t border-gray-200', className)}
+      className={cn('bg-stone-50 border-t border-stone-200', className)}
       {...props}
     />
   )
@@ -67,7 +67,7 @@ const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(
       ref={ref}
       className={cn(
         'transition-colors',
-        !isHeader && 'hover:bg-gray-50',
+        !isHeader && 'hover:bg-stone-50',
         className
       )}
       {...props}
@@ -84,7 +84,7 @@ const TableHead = forwardRef<HTMLTableCellElement, TableHeadProps>(
     <th
       ref={ref}
       className={cn(
-        'px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap',
+        'px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider bg-stone-50 whitespace-nowrap',
         className
       )}
       {...props}
@@ -100,7 +100,7 @@ const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
   ({ className, ...props }, ref) => (
     <td
       ref={ref}
-      className={cn('px-4 py-3 text-gray-700', className)}
+      className={cn('px-4 py-3 text-stone-700', className)}
       {...props}
     />
   )

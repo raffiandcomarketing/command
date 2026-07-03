@@ -245,29 +245,29 @@ export default function RolePage() {
   if (!dept || !role) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Role not found</h2>
+        <h2 className="text-xl font-semibold text-stone-900 mb-2">Role not found</h2>
         <Button onClick={() => router.back()}>Go Back</Button>
       </div>
     );
   }
 
   const StatCard = ({ icon: Icon, label, value }: any) => (
-    <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
+    <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-gray-500 text-sm font-medium">{label}</span>
-          <Icon className="w-5 h-5 text-gray-400" />
+          <span className="text-stone-500 text-sm font-medium">{label}</span>
+          <Icon className="w-5 h-5 text-stone-400" />
         </div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <p className="text-2xl font-bold text-stone-900">{value}</p>
       </div>
     </Card>
   );
 
   const TaskItem = ({ task }: any) => (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200 last:border-0">
+    <div className="flex items-center justify-between p-4 border-b border-stone-200 last:border-0">
       <div className="flex-1">
-        <p className="font-medium text-gray-900">{task.title}</p>
-        <p className="text-sm text-gray-500 mt-1">Due: {task.dueDate}</p>
+        <p className="font-medium text-stone-900">{task.title}</p>
+        <p className="text-sm text-stone-500 mt-1">Due: {task.dueDate}</p>
       </div>
       <div className="flex items-center gap-3">
         <Badge
@@ -286,7 +286,7 @@ export default function RolePage() {
             'text-xs',
             task.status === 'in-progress' &&
               'bg-blue-500/10 text-blue-700 border-blue-200',
-            task.status === 'pending' && 'bg-gray-500/10 text-gray-700 border-gray-200',
+            task.status === 'pending' && 'bg-stone-500/10 text-stone-700 border-stone-200',
             task.status === 'completed' &&
               'bg-emerald-500/10 text-emerald-700 border-emerald-200'
           )}
@@ -299,10 +299,10 @@ export default function RolePage() {
   );
 
   const ApprovalItem = ({ approval }: any) => (
-    <div className="flex items-start justify-between p-4 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
+    <div className="flex items-start justify-between p-4 border-b border-stone-200 last:border-0 hover:bg-stone-50 transition-colors">
       <div className="flex-1">
-        <p className="font-medium text-gray-900">{approval.title}</p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="font-medium text-stone-900">{approval.title}</p>
+        <p className="text-sm text-stone-500 mt-1">
           From {approval.requester} • {approval.submitted}
         </p>
         {approval.amount && (
@@ -339,7 +339,7 @@ export default function RolePage() {
   return (
     <div className="space-y-8">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-sm text-stone-500">
         <Button variant="ghost" size="sm" onClick={() => router.back()} className="p-0">
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back
@@ -349,18 +349,18 @@ export default function RolePage() {
           {dept.name}
         </a>
         <span>•</span>
-        <span className="text-gray-700">{role.title}</span>
+        <span className="text-stone-700">{role.title}</span>
       </div>
 
       {/* Role Header */}
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{role.title}</h1>
-            <p className="text-gray-500">{role.description}</p>
+            <h1 className="text-4xl font-semibold text-stone-900 mb-2">{role.title}</h1>
+            <p className="text-stone-500">{role.description}</p>
           </div>
           <Badge
-            className="bg-white text-gray-900 border-gray-200 h-fit"
+            className="bg-white text-stone-900 border-stone-200 h-fit"
             style={{ borderColor: dept.color + '40' }}
           >
             {dept.name}
@@ -384,7 +384,7 @@ export default function RolePage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-white border-b border-gray-200 w-full justify-start rounded-none p-0 h-auto">
+        <TabsList className="bg-white border-b border-stone-200 w-full justify-start rounded-none p-0 h-auto">
           <TabsTrigger
             value="overview"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#09203F] data-[state=active]:bg-transparent"
@@ -434,9 +434,9 @@ export default function RolePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Upcoming Deadlines */}
             <div className="lg:col-span-2">
-              <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                <div className="border-b border-gray-200 p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+                <div className="border-b border-stone-200 p-6">
+                  <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-[#09203F]" />
                     Upcoming Deadlines
                   </h2>
@@ -445,11 +445,11 @@ export default function RolePage() {
                   {mockUpcomingDeadlines.map((deadline) => (
                     <div
                       key={deadline.id}
-                      className="flex items-center justify-between p-6 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between p-6 border-b border-stone-200 last:border-0 hover:bg-stone-50 transition-colors"
                     >
                       <div>
-                        <p className="font-medium text-gray-900">{deadline.title}</p>
-                        <p className="text-sm text-gray-500 mt-1">Due {deadline.dueDate}</p>
+                        <p className="font-medium text-stone-900">{deadline.title}</p>
+                        <p className="text-sm text-stone-500 mt-1">Due {deadline.dueDate}</p>
                       </div>
                       <Badge
                         className={cn(
@@ -472,25 +472,25 @@ export default function RolePage() {
 
             {/* Key Metrics */}
             <div>
-              <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                <div className="border-b border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Key Metrics</h3>
+              <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+                <div className="border-b border-stone-200 p-6">
+                  <h3 className="text-lg font-semibold text-stone-900">Key Metrics</h3>
                 </div>
                 <div className="p-6 space-y-6">
                   <div>
-                    <p className="text-sm text-gray-500 mb-2">Task Completion Rate</p>
-                    <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <p className="text-sm text-stone-500 mb-2">Task Completion Rate</p>
+                    <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
                       <div
                         className="bg-emerald-500 h-full"
                         style={{ width: '75%' }}
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">75% (3 of 4)</p>
+                    <p className="text-xs text-stone-500 mt-2">75% (3 of 4)</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 mb-2">Approval Response Time</p>
-                    <p className="text-lg font-bold text-gray-900">2.4 hours</p>
-                    <p className="text-xs text-gray-500 mt-1">Average response</p>
+                    <p className="text-sm text-stone-500 mb-2">Approval Response Time</p>
+                    <p className="text-lg font-bold text-stone-900">2.4 hours</p>
+                    <p className="text-xs text-stone-500 mt-1">Average response</p>
                   </div>
                 </div>
               </Card>
@@ -500,11 +500,11 @@ export default function RolePage() {
 
         {/* Tasks Tab */}
         <TabsContent value="tasks" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Assigned Tasks</h2>
-                <Button size="sm" className="bg-[#09203F] hover:bg-[#0a2651] text-white" onClick={() => setIsModalOpen(true)}>
+                <h2 className="text-lg font-semibold text-stone-900">Assigned Tasks</h2>
+                <Button size="sm" className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white" onClick={() => setIsModalOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   New Task
                 </Button>
@@ -520,20 +520,20 @@ export default function RolePage() {
 
         {/* Workflows Tab */}
         <TabsContent value="workflows" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900">Owned Workflows</h2>
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
+              <h2 className="text-lg font-semibold text-stone-900">Owned Workflows</h2>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-stone-200">
               {mockWorkflows.map((workflow) => (
                 <div
                   key={workflow.id}
-                  className="p-6 hover:bg-gray-50 transition-colors"
+                  className="p-6 hover:bg-stone-50 transition-colors"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="font-medium text-gray-900">{workflow.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{workflow.description}</p>
+                      <h3 className="font-medium text-stone-900">{workflow.name}</h3>
+                      <p className="text-sm text-stone-500 mt-1">{workflow.description}</p>
                     </div>
                     <Badge
                       className="bg-emerald-500/10 text-emerald-700 border-emerald-200"
@@ -542,7 +542,7 @@ export default function RolePage() {
                       {workflow.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-500">{workflow.executions} total executions</p>
+                  <p className="text-sm text-stone-500">{workflow.executions} total executions</p>
                 </div>
               ))}
             </div>
@@ -551,9 +551,9 @@ export default function RolePage() {
 
         {/* Approvals Tab */}
         <TabsContent value="approvals" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900">Pending Approvals</h2>
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
+              <h2 className="text-lg font-semibold text-stone-900">Pending Approvals</h2>
             </div>
             <div>
               {mockApprovals.map((approval) => (
@@ -565,24 +565,24 @@ export default function RolePage() {
 
         {/* SOPs Tab */}
         <TabsContent value="sops" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
+              <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#09203F]" />
                 Standard Operating Procedures
               </h2>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-stone-200">
               {mockSops.map((sop) => (
                 <div
                   key={sop.id}
-                  className="flex items-center justify-between p-6 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-6 border-b border-stone-200 last:border-0 hover:bg-stone-50 transition-colors cursor-pointer"
                 >
                   <div>
-                    <p className="font-medium text-gray-900">{sop.title}</p>
-                    <p className="text-sm text-gray-500 mt-1">v{sop.version} • {sop.pages} pages</p>
+                    <p className="font-medium text-stone-900">{sop.title}</p>
+                    <p className="text-sm text-stone-500 mt-1">v{sop.version} • {sop.pages} pages</p>
                   </div>
-                  <p className="text-sm text-gray-500">{sop.updated}</p>
+                  <p className="text-sm text-stone-500">{sop.updated}</p>
                 </div>
               ))}
             </div>
@@ -591,33 +591,33 @@ export default function RolePage() {
 
         {/* Automations Tab */}
         <TabsContent value="automations" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
+              <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                 <Zap className="w-5 h-5 text-[#09203F]" />
                 Role Automations
               </h2>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-stone-200">
               {mockAutomations.map((auto) => (
-                <div key={auto.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={auto.id} className="p-6 hover:bg-stone-50 transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{auto.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{auto.frequency}</p>
+                      <h3 className="font-medium text-stone-900">{auto.name}</h3>
+                      <p className="text-sm text-stone-500 mt-1">{auto.frequency}</p>
                     </div>
                     <Badge
                       className={cn(
                         auto.active
                           ? 'bg-emerald-500/10 text-emerald-700 border-emerald-200'
-                          : 'bg-gray-500/10 text-gray-700 border-gray-200'
+                          : 'bg-stone-500/10 text-stone-700 border-stone-200'
                       )}
                       variant="outline"
                     >
                       {auto.active ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500">Last run: {auto.lastRun}</p>
+                  <p className="text-xs text-stone-500">Last run: {auto.lastRun}</p>
                 </div>
               ))}
             </div>
@@ -626,22 +626,22 @@ export default function RolePage() {
 
         {/* Audit Log Tab */}
         <TabsContent value="audit" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900">Audit Trail</h2>
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
+              <h2 className="text-lg font-semibold text-stone-900">Audit Trail</h2>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-stone-200">
               {mockAudit.map((entry) => (
-                <div key={entry.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={entry.id} className="p-6 hover:bg-stone-50 transition-colors">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-full bg-[#09203F]/10 flex items-center justify-center flex-shrink-0">
                       <CheckSquare className="w-5 h-5 text-[#09203F]" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{entry.action}</p>
-                      <p className="text-sm text-gray-500 mt-1">{entry.entity}</p>
-                      <p className="text-xs text-gray-500 mt-2">{entry.details}</p>
-                      <p className="text-xs text-gray-400 mt-1">{entry.timestamp}</p>
+                      <p className="font-medium text-stone-900">{entry.action}</p>
+                      <p className="text-sm text-stone-500 mt-1">{entry.entity}</p>
+                      <p className="text-xs text-stone-500 mt-2">{entry.details}</p>
+                      <p className="text-xs text-stone-400 mt-1">{entry.timestamp}</p>
                     </div>
                   </div>
                 </div>
@@ -676,13 +676,13 @@ export default function RolePage() {
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <label className="block text-sm font-medium text-stone-700 mb-2">Description</label>
             <textarea
               placeholder="Enter task description (optional)"
               value={taskForm.description}
               onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
               className={cn(
-                'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 transition-colors duration-200 min-h-24 resize-none',
+                'w-full px-4 py-2 rounded-lg bg-white border border-stone-300 text-stone-900 placeholder-stone-400 transition-colors duration-200 min-h-24 resize-none',
                 'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20'
               )}
             />
@@ -690,12 +690,12 @@ export default function RolePage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <label className="block text-sm font-medium text-stone-700 mb-2">Priority</label>
               <select
                 value={taskForm.priority}
                 onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
                 className={cn(
-                  'w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 transition-colors duration-200',
+                  'w-full px-4 py-2 rounded-lg bg-white border border-stone-300 text-stone-900 transition-colors duration-200',
                   'focus:outline-none focus:border-[#09203F] focus:ring-1 focus:ring-[#09203F]/20'
                 )}
               >
@@ -718,13 +718,13 @@ export default function RolePage() {
           <div className="flex gap-3 pt-4">
             <Button
               onClick={handleCreateTask}
-              className="flex-1 bg-[#09203F] hover:bg-[#0a2651] text-white font-medium h-11 transition-all duration-200"
+              className="flex-1 bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium h-11 transition-all duration-200"
             >
               Create Task
             </Button>
             <Button
               onClick={() => setIsModalOpen(false)}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium h-11 transition-all duration-200"
+              className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-900 font-medium h-11 transition-all duration-200"
             >
               Cancel
             </Button>

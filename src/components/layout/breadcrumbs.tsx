@@ -21,7 +21,7 @@ export default function Breadcrumbs() {
   if (segments.length === 0) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-500">Dashboard</span>
+        <span className="text-sm text-stone-500">Dashboard</span>
       </div>
     );
   }
@@ -43,20 +43,20 @@ export default function Breadcrumbs() {
     <div className="flex items-center gap-2">
       <Link
         href="/dashboard"
-        className="text-sm text-gray-500 hover:text-[#09203F] transition-colors"
+        className="text-sm text-stone-500 hover:text-[#09203F] transition-colors"
       >
         Dashboard
       </Link>
 
       {breadcrumbs.map((crumb) => (
         <div key={crumb.href} className="flex items-center gap-2">
-          <ChevronRight className="w-4 h-4 text-gray-300" />
+          <ChevronRight className="w-4 h-4 text-stone-300" />
           {crumb.isLast ? (
-            <span className="text-sm text-gray-900 font-medium">{crumb.label}</span>
+            <span className="text-sm text-stone-900 font-medium">{crumb.label}</span>
           ) : (
             <Link
               href={crumb.href}
-              className="text-sm text-gray-500 hover:text-[#09203F] transition-colors"
+              className="text-sm text-stone-500 hover:text-[#09203F] transition-colors"
             >
               {crumb.label}
             </Link>

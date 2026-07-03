@@ -19,7 +19,7 @@ interface SearchResults {
   users: Array<{ id: string; name: string; email: string }>;
 }
 
-export default function Header() {
+export default function Header({ sidebarWidth = 280 }: { sidebarWidth?: number }) {
   const { data: session } = useSession();
   const router = useRouter();
   const [searchFocused, setSearchFocused] = useState(false);
@@ -100,7 +100,7 @@ export default function Header() {
   ) =>
     items.length > 0 && (
       <div key={label}>
-        <p className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
+        <p className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-stone-400 font-semibold">{label}</p>
         {items.map((i) => (
           <button
             key={i.key}
@@ -108,11 +108,11 @@ export default function Header() {
               e.preventDefault();
               go(i.href);
             }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 text-left"
           >
-            <span className="text-gray-400">{icon}</span>
+            <span className="text-stone-400">{icon}</span>
             <span className="truncate">{i.text}</span>
-            {i.sub && <span className="text-xs text-gray-400 truncate">· {i.sub}</span>}
+            {i.sub && <span className="text-xs text-stone-400 truncate">· {i.sub}</span>}
           </button>
         ))}
       </div>
@@ -121,11 +121,11 @@ export default function Header() {
   return (
     <header
       className={cn(
-        'fixed top-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200',
+        'fixed top-0 right-0 h-16 bg-[#FAF8F4]/85 backdrop-blur-md border-b border-stone-200/70',
         'flex items-center justify-between px-6 z-30',
         'transition-all duration-300'
       )}
-      style={{ left: '280px' }}
+      style={{ left: `${sidebarWidth}px` }}
     >
       <div className="flex-1 min-w-0">
         <Breadcrumbs />
@@ -135,26 +135,26 @@ export default function Header() {
       <div className="flex-1 max-w-xs mx-8 relative" ref={searchRef}>
         <div
           className={cn(
-            'relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200',
-            'bg-gray-100 border border-gray-200',
-            searchFocused && 'border-gray-300 shadow-md bg-white'
+            'relative flex items-center gap-3 px-4 py-2 rounded-full transition-all duration-200',
+            'bg-white border border-stone-200',
+            searchFocused && 'border-gold-400/70 shadow-luxe'
           )}
         >
-          <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <Search className="w-4 h-4 text-stone-400 flex-shrink-0" />
           <input
             type="text"
             placeholder="Search tasks, deals, people…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent text-sm text-gray-900 placeholder-gray-400 outline-none"
+            className="flex-1 bg-transparent text-sm text-stone-900 placeholder-stone-400 outline-none"
             onFocus={() => setSearchFocused(true)}
           />
         </div>
 
         {searchFocused && query.trim().length >= 2 && (
-          <div className="absolute top-full mt-2 left-0 right-0 rounded-lg bg-white border border-gray-200 shadow-xl z-50 py-1 max-h-96 overflow-y-auto">
-            {searching && <p className="px-4 py-3 text-sm text-gray-400">Searching…</p>}
-            {!searching && !hasAnyResult && <p className="px-4 py-3 text-sm text-gray-400">No results for “{query.trim()}”</p>}
+          <div className="absolute top-full mt-2 left-0 right-0 rounded-xl bg-white border border-stone-200 shadow-luxe-md z-50 py-1 max-h-96 overflow-y-auto">
+            {searching && <p className="px-4 py-3 text-sm text-stone-400">Searching…</p>}
+            {!searching && !hasAnyResult && <p className="px-4 py-3 text-sm text-stone-400">No results for “{query.trim()}”</p>}
             {!searching && results && (
               <>
                 {group('Tasks', <CheckSquare className="w-4 h-4" />, results.tasks.map((t) => ({ key: t.id, text: t.title, href: '/tasks' })))}
@@ -173,12 +173,12 @@ export default function Header() {
         {/* Notifications - real unread count, links to the notifications page */}
         <Link
           href="/notifications"
-          className={cn('relative p-2 rounded-lg transition-colors', 'text-gray-500 hover:text-gray-700')}
+          className={cn('relative p-2 rounded-lg transition-colors', 'text-stone-500 hover:text-stone-800 hover:bg-white')}
           title="Notifications"
         >
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 min-w-5 h-5 px-1 flex items-center justify-center text-xs font-bold bg-[#09203F] text-white rounded-full">
+            <span className="absolute top-0 right-0 min-w-5 h-5 px-1 flex items-center justify-center text-xs font-bold bg-gold-500 text-[#081A33] rounded-full">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
@@ -187,25 +187,25 @@ export default function Header() {
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className={cn('relative flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors', 'hover:bg-gray-100 group')}
+            className={cn('relative flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors', 'hover:bg-stone-100 group')}
             title="User menu"
           >
             <Avatar className="w-8 h-8">
-              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-xs font-bold text-[#09203F]">
+              <div className="w-full h-full bg-gradient-to-br from-gold-100 to-gold-200 flex items-center justify-center text-xs font-bold text-[#081A33]">
                 {getInitials(session?.user?.name)}
               </div>
             </Avatar>
-            <span className="text-sm text-gray-700 hidden sm:inline group-hover:text-gray-900">
+            <span className="text-sm text-stone-700 hidden sm:inline group-hover:text-stone-900">
               {session?.user?.name?.split(' ')[0] || 'User'}
             </span>
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 rounded-lg bg-white border border-gray-200 shadow-lg z-50 py-1">
+            <div className="absolute right-0 top-full mt-2 w-48 rounded-lg bg-white border border-stone-200 shadow-lg z-50 py-1">
               <Link
                 href="/settings"
                 onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
               >
                 <User className="w-4 h-4" />
                 Profile
@@ -213,7 +213,7 @@ export default function Header() {
               <Link
                 href="/settings"
                 onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
               >
                 <Settings className="w-4 h-4" />
                 Settings
@@ -223,12 +223,12 @@ export default function Header() {
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
               >
                 <HelpCircle className="w-4 h-4" />
                 Help
               </a>
-              <div className="my-1 h-px bg-gray-200" />
+              <div className="my-1 h-px bg-stone-200" />
               <button
                 onClick={() => signOut({ callbackUrl: '/login' })}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"

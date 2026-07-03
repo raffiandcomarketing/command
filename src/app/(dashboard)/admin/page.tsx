@@ -42,7 +42,7 @@ const adminPages = [
 
 export default function AdminPage() {
   const StatCard = ({ icon: Icon, label, value, change, color, unit, }: any) => (
-    <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
+    <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className={cn('p-3 rounded-lg bg-gradient-to-br', color)}>
@@ -60,10 +60,10 @@ export default function AdminPage() {
             {unit ? unit : '%'}
           </Badge>
         </div>
-        <h3 className="text-gray-500 text-sm font-medium mb-1">{label}</h3>
-        <p className="text-3xl font-bold text-gray-900">
+        <h3 className="text-stone-500 text-sm font-medium mb-1">{label}</h3>
+        <p className="text-3xl font-bold text-stone-900">
           {value}
-          {unit && <span className="text-sm text-gray-500 ml-1">{unit}</span>}
+          {unit && <span className="text-sm text-stone-500 ml-1">{unit}</span>}
         </p>
       </div>
     </Card>
@@ -73,8 +73,8 @@ export default function AdminPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-500">
+        <h1 className="text-4xl font-semibold text-stone-900 mb-2">Admin Dashboard</h1>
+        <p className="text-stone-500">
           System administration, user management, and integration configuration.
         </p>
       </div>
@@ -97,16 +97,16 @@ export default function AdminPage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+          <div className="border-b border-stone-200 p-6">
+            <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
               <Activity className="w-5 h-5 text-[#09203F]" />
               Recent System Activity
             </h2>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-stone-200">
             {recentActivity.map((activity) => (
-              <div key={activity.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={activity.id} className="p-6 hover:bg-stone-50 transition-colors">
                 <div className="flex items-start gap-4">
                   <div
                     className={cn(
@@ -127,9 +127,9 @@ export default function AdminPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                    <p className="text-xs text-gray-600 mt-1">{activity.details}</p>
-                    <p className="text-xs text-gray-500 mt-2">{activity.timestamp}</p>
+                    <p className="text-sm font-medium text-stone-900">{activity.action}</p>
+                    <p className="text-xs text-stone-600 mt-1">{activity.details}</p>
+                    <p className="text-xs text-stone-500 mt-2">{activity.timestamp}</p>
                   </div>
                 </div>
               </div>
@@ -138,18 +138,18 @@ export default function AdminPage() {
         </Card>
 
         {/* Integration Status */}
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+          <div className="border-b border-stone-200 p-6">
+            <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
               <Zap className="w-5 h-5 text-[#09203F]" />
               Integration Status
             </h2>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-stone-200">
             {integrationStatus.map((integration) => (
-              <div key={integration.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={integration.id} className="p-6 hover:bg-stone-50 transition-colors">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-900">{integration.name}</h3>
+                  <h3 className="text-sm font-medium text-stone-900">{integration.name}</h3>
                   <Badge
                     variant="outline"
                     className={cn(
@@ -162,7 +162,7 @@ export default function AdminPage() {
                     {integration.status}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center justify-between text-xs text-stone-500">
                   <span>Last sync: {integration.lastSync}</span>
                   <span className="text-emerald-600">{integration.syncRate}</span>
                 </div>
@@ -174,26 +174,26 @@ export default function AdminPage() {
 
       {/* Quick Links to Admin Pages */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Admin Tools</h2>
+        <h2 className="text-xl font-semibold text-stone-900 mb-4">Admin Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {adminPages.map((page) => {
             const Icon = page.icon;
             return (
               <Card
                 key={page.id}
-                className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-[#09203F]/20 transition-all group cursor-pointer"
+                className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md hover:border-[#09203F]/20 transition-all group cursor-pointer"
               >
                 <div className="p-6">
                   <div className="p-3 rounded-lg bg-[#09203F]/10 w-fit mb-4">
                     <Icon className="w-6 h-6 text-[#09203F]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#09203F] transition-colors mb-2">
+                  <h3 className="text-lg font-semibold text-stone-900 group-hover:text-[#09203F] transition-colors mb-2">
                     {page.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-6">{page.description}</p>
+                  <p className="text-sm text-stone-600 mb-6">{page.description}</p>
                   <Button
                     variant="ghost"
-                    className="w-full bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200 justify-start group/btn"
+                    className="w-full bg-stone-50 hover:bg-stone-100 text-stone-900 border border-stone-200 justify-start group/btn"
                     asChild
                   >
                     <a href={page.href}>
@@ -209,9 +209,9 @@ export default function AdminPage() {
       </div>
 
       {/* System Health Detailed */}
-      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-        <div className="border-b border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+      <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+        <div className="border-b border-stone-200 p-6">
+          <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
             <Activity className="w-5 h-5 text-[#09203F]" />
             Detailed System Health
           </h2>
@@ -219,7 +219,7 @@ export default function AdminPage() {
         <div className="p-6 space-y-6">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700">API Response Time</span>
+              <span className="text-sm font-medium text-stone-700">API Response Time</span>
               <Badge
                 variant="outline"
                 className="bg-emerald-500/10 text-emerald-700 border-emerald-200"
@@ -227,15 +227,15 @@ export default function AdminPage() {
                 Healthy
               </Badge>
             </div>
-            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
               <div className="bg-emerald-600 h-full" style={{ width: '95%' }} />
             </div>
-            <p className="text-xs text-gray-600 mt-2">Average: 125ms</p>
+            <p className="text-xs text-stone-600 mt-2">Average: 125ms</p>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700">Database Performance</span>
+              <span className="text-sm font-medium text-stone-700">Database Performance</span>
               <Badge
                 variant="outline"
                 className="bg-emerald-500/10 text-emerald-700 border-emerald-200"
@@ -243,15 +243,15 @@ export default function AdminPage() {
                 Healthy
               </Badge>
             </div>
-            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
               <div className="bg-emerald-600 h-full" style={{ width: '98%' }} />
             </div>
-            <p className="text-xs text-gray-600 mt-2">CPU Usage: 32%</p>
+            <p className="text-xs text-stone-600 mt-2">CPU Usage: 32%</p>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700">Storage Utilization</span>
+              <span className="text-sm font-medium text-stone-700">Storage Utilization</span>
               <Badge
                 variant="outline"
                 className="bg-yellow-500/10 text-yellow-700 border-yellow-200"
@@ -259,10 +259,10 @@ export default function AdminPage() {
                 Warning
               </Badge>
             </div>
-            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
               <div className="bg-yellow-500 h-full" style={{ width: '78%' }} />
             </div>
-            <p className="text-xs text-gray-600 mt-2">750GB of 1TB used</p>
+            <p className="text-xs text-stone-600 mt-2">750GB of 1TB used</p>
           </div>
         </div>
       </Card>

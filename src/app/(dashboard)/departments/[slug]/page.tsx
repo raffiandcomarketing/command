@@ -602,7 +602,7 @@ export default function DepartmentPage() {
   if (!dept) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Department not found</h2>
+        <h2 className="text-xl font-semibold text-stone-900 mb-2">Department not found</h2>
         <Button onClick={() => router.back()}>Go Back</Button>
       </div>
     );
@@ -612,22 +612,22 @@ export default function DepartmentPage() {
   const deptData = departmentData[slug] || departmentData.marketing;
 
   const StatCard = ({ icon: IconComp, label, value }: any) => (
-    <Card className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200">
+    <Card className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md hover:border-stone-300 transition-all duration-200">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-gray-500 text-sm font-medium">{label}</span>
-          <IconComp className="w-5 h-5 text-gray-400" />
+          <span className="text-stone-500 text-sm font-medium">{label}</span>
+          <IconComp className="w-5 h-5 text-stone-400" />
         </div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <p className="text-2xl font-bold text-stone-900">{value}</p>
       </div>
     </Card>
   );
 
   const TaskItem = ({ task }: any) => (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
+    <div className="flex items-center justify-between p-4 border-b border-stone-200 last:border-0 hover:bg-stone-50 transition-colors">
       <div className="flex-1">
-        <p className="font-medium text-gray-900">{task.title}</p>
-        <p className="text-sm text-gray-500 mt-1">{task.assignee}</p>
+        <p className="font-medium text-stone-900">{task.title}</p>
+        <p className="text-sm text-stone-500 mt-1">{task.assignee}</p>
       </div>
       <div className="flex items-center gap-3">
         <Badge
@@ -646,7 +646,7 @@ export default function DepartmentPage() {
             task.status === 'in-progress' &&
               'bg-blue-500/10 text-blue-700 border-blue-200',
             task.status === 'review' && 'bg-purple-500/10 text-purple-700 border-purple-200',
-            task.status === 'pending' && 'bg-gray-500/10 text-gray-700 border-gray-200'
+            task.status === 'pending' && 'bg-stone-500/10 text-stone-700 border-stone-200'
           )}
           variant="outline"
         >
@@ -668,8 +668,8 @@ export default function DepartmentPage() {
             <Icon className="w-12 h-12" style={{ color: dept.color }} />
           </div>
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">{dept.name}</h1>
-            <p className="text-gray-600 text-lg">{dept.description}</p>
+            <h1 className="text-4xl font-bold text-stone-900 mb-2">{dept.name}</h1>
+            <p className="text-stone-600 text-lg">{dept.description}</p>
           </div>
         </div>
 
@@ -690,7 +690,7 @@ export default function DepartmentPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-white border-b border-gray-200 w-full justify-start rounded-none p-0 h-auto gap-0">
+        <TabsList className="bg-white border-b border-stone-200 w-full justify-start rounded-none p-0 h-auto gap-0">
           <TabsTrigger
             value="overview"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#09203F] data-[state=active]:bg-transparent px-4 py-3 text-sm font-medium transition-colors"
@@ -734,30 +734,30 @@ export default function DepartmentPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Recent Activity */}
             <div className="lg:col-span-2">
-              <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                <div className="border-b border-gray-200 p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+                <div className="border-b border-stone-200 p-6">
+                  <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                     <Clock className="w-5 h-5 text-[#09203F]" />
                     Recent Activity
                   </h2>
                 </div>
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-stone-200">
                   {deptData.activities.map((activity) => (
                     <div
                       key={activity.id}
-                      className="p-6 hover:bg-gray-50 transition-colors"
+                      className="p-6 hover:bg-stone-50 transition-colors"
                     >
                       <div className="flex items-start gap-4">
                         <div className="w-10 h-10 rounded-full bg-[#09203F]/10 flex items-center justify-center flex-shrink-0">
                           <CheckSquare className="w-5 h-5 text-[#09203F]" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm text-gray-900">
+                          <p className="text-sm text-stone-900">
                             <span className="font-medium">{activity.user}</span>
                             {' ' + activity.action + ' '}
                             <span className="text-[#09203F] font-medium">{activity.entity}</span>
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">{activity.timestamp}</p>
+                          <p className="text-xs text-stone-500 mt-1">{activity.timestamp}</p>
                         </div>
                       </div>
                     </div>
@@ -768,20 +768,20 @@ export default function DepartmentPage() {
 
             {/* Quick Actions */}
             <div>
-              <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                <div className="border-b border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+              <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+                <div className="border-b border-stone-200 p-6">
+                  <h3 className="text-lg font-semibold text-stone-900">Quick Actions</h3>
                 </div>
                 <div className="p-6 space-y-3">
-                  <Button className="w-full bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200 justify-start transition-colors">
+                  <Button className="w-full bg-stone-50 hover:bg-stone-100 text-stone-900 border border-stone-200 justify-start transition-colors">
                     <Plus className="w-4 h-4 mr-2" />
                     New Task
                   </Button>
-                  <Button className="w-full bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200 justify-start transition-colors">
+                  <Button className="w-full bg-stone-50 hover:bg-stone-100 text-stone-900 border border-stone-200 justify-start transition-colors">
                     <Zap className="w-4 h-4 mr-2" />
                     Create Automation
                   </Button>
-                  <Button className="w-full bg-[#09203F] hover:bg-[#0a2651] text-white font-medium justify-start transition-colors">
+                  <Button className="w-full bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white font-medium justify-start transition-colors">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     View Reports
                   </Button>
@@ -797,16 +797,16 @@ export default function DepartmentPage() {
             {roles.map((role) => (
               <Card
                 key={role.slug}
-                className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg hover:border-[#09203F]/30 transition-all duration-200 group cursor-pointer"
+                className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-lg hover:border-[#09203F]/30 transition-all duration-200 group cursor-pointer"
               >
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#09203F] mb-2 transition-colors">
+                  <h3 className="text-lg font-semibold text-stone-900 group-hover:text-[#09203F] mb-2 transition-colors">
                     {role.title}
                   </h3>
-                  <p className="text-sm text-gray-500 mb-6">{role.description}</p>
+                  <p className="text-sm text-stone-500 mb-6">{role.description}</p>
                   <Button
                     variant="ghost"
-                    className="w-full bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200 transition-colors"
+                    className="w-full bg-stone-50 hover:bg-stone-100 text-stone-900 border border-stone-200 transition-colors"
                     asChild
                   >
                     <a href={`/departments/${slug}/roles/${role.slug}`}>
@@ -822,9 +822,9 @@ export default function DepartmentPage() {
 
         {/* Tasks Tab */}
         <TabsContent value="tasks" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900">Department Tasks</h2>
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
+              <h2 className="text-lg font-semibold text-stone-900">Department Tasks</h2>
             </div>
             <div>
               {deptData.tasks.map((task) => (
@@ -838,10 +838,10 @@ export default function DepartmentPage() {
         <TabsContent value="kpis" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {deptData.kpis.map((kpi) => (
-              <Card key={kpi.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+              <Card key={kpi.id} className="bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-medium text-gray-900">{kpi.name}</h3>
+                    <h3 className="font-medium text-stone-900">{kpi.name}</h3>
                     <Badge
                       className={cn(
                         kpi.trend === 'up' && 'bg-emerald-500/10 text-emerald-700',
@@ -852,14 +852,14 @@ export default function DepartmentPage() {
                       {kpi.trend === 'up' ? '+' : '-'}{kpi.trendPercent}%
                     </Badge>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 mb-2">{kpi.value}</p>
-                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                  <p className="text-2xl font-bold text-stone-900 mb-2">{kpi.value}</p>
+                  <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
                     <div
                       className="bg-[#09203F] h-full rounded-full transition-all duration-500"
                       style={{ width: `${(kpi.value / kpi.target) * 100}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Target: {kpi.target}</p>
+                  <p className="text-xs text-stone-500 mt-2">Target: {kpi.target}</p>
                 </div>
               </Card>
             ))}
@@ -868,9 +868,9 @@ export default function DepartmentPage() {
 
         {/* SOPs Tab */}
         <TabsContent value="sops" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
+              <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#09203F]" />
                 Standard Operating Procedures
               </h2>
@@ -879,13 +879,13 @@ export default function DepartmentPage() {
               {deptData.sops.map((sop) => (
                 <div
                   key={sop.id}
-                  className="flex items-center justify-between p-6 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-6 border-b border-stone-200 last:border-0 hover:bg-stone-50 transition-colors cursor-pointer"
                 >
                   <div>
-                    <p className="font-medium text-gray-900">{sop.title}</p>
-                    <p className="text-sm text-gray-500 mt-1">v{sop.version}</p>
+                    <p className="font-medium text-stone-900">{sop.title}</p>
+                    <p className="text-sm text-stone-500 mt-1">v{sop.version}</p>
                   </div>
-                  <p className="text-sm text-gray-500">{sop.updated}</p>
+                  <p className="text-sm text-stone-500">{sop.updated}</p>
                 </div>
               ))}
             </div>
@@ -894,39 +894,39 @@ export default function DepartmentPage() {
 
         {/* Automations Tab */}
         <TabsContent value="automations" className="mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="border-b border-gray-200 p-6">
+          <Card className="bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="border-b border-stone-200 p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
                   <Zap className="w-5 h-5 text-[#09203F]" />
                   Automation Rules
                 </h2>
-                <Button size="sm" className="bg-[#09203F] hover:bg-[#0a2651] text-white transition-colors">
+                <Button size="sm" className="bg-[#0A2245] hover:bg-[#0E2C55] shadow-luxe text-white transition-colors">
                   <Plus className="w-4 h-4 mr-2" />
                   New Rule
                 </Button>
               </div>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-stone-200">
               {deptData.automations.map((auto) => (
-                <div key={auto.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={auto.id} className="p-6 hover:bg-stone-50 transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{auto.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{auto.description}</p>
+                      <h3 className="font-medium text-stone-900">{auto.name}</h3>
+                      <p className="text-sm text-stone-500 mt-1">{auto.description}</p>
                     </div>
                     <Badge
                       className={cn(
                         auto.active
                           ? 'bg-emerald-500/10 text-emerald-700 border-emerald-200'
-                          : 'bg-gray-500/10 text-gray-700 border-gray-200'
+                          : 'bg-stone-500/10 text-stone-700 border-stone-200'
                       )}
                       variant="outline"
                     >
                       {auto.active ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-4 text-xs text-stone-500">
                     <span>{auto.trigger} Trigger</span>
                     <span>•</span>
                     <span>{auto.executions} executions</span>

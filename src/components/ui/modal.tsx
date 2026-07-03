@@ -52,7 +52,7 @@ const Modal = forwardRef<HTMLDivElement, ModalProps>(
     return (
       <div className="fixed inset-0 z-50">
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 bg-[#09203F]/25 backdrop-blur-[6px]"
           onClick={() => onOpenChange(false)}
         />
 
@@ -60,22 +60,22 @@ const Modal = forwardRef<HTMLDivElement, ModalProps>(
           <div
             ref={ref}
             className={cn(
-              'w-full rounded-2xl bg-white border border-gray-200 shadow-2xl overflow-hidden',
+              'w-full rounded-2xl bg-white border border-stone-200/80 shadow-luxe-md overflow-hidden',
               sizeClasses[size],
               className
             )}
             {...props}
           >
             {(title || showCloseButton) && (
-              <div className="flex items-center justify-between border-b border-gray-200 p-6">
+              <div className="flex items-center justify-between border-b border-stone-100 p-6">
                 <div>
                   {title && (
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-xl font-semibold text-stone-900">
                       {title}
                     </h2>
                   )}
                   {description && (
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-stone-500">
                       {description}
                     </p>
                   )}
@@ -83,7 +83,7 @@ const Modal = forwardRef<HTMLDivElement, ModalProps>(
                 {showCloseButton && (
                   <button
                     onClick={() => onOpenChange(false)}
-                    className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+                    className="p-1 hover:bg-stone-100 rounded-lg transition-colors text-stone-500 hover:text-stone-700"
                   >
                     <X className="h-5 w-5" />
                   </button>
