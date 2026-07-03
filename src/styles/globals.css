@@ -53,13 +53,12 @@
     font-feature-settings: 'cv02', 'cv03', 'cv04';
   }
 
-  /* Display serif for the two top heading levels - the boutique voice.
-     Component-level classNames can still override per case. */
+  /* Refined sans display for headings - tight tracking, medium weight. */
   h1,
   h2 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-weight: 600;
-    letter-spacing: 0.005em;
+    letter-spacing: -0.02em;
   }
 
   /* Selection Styling */

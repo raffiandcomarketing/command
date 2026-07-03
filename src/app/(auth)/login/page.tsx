@@ -59,7 +59,7 @@ export default function LoginPage() {
               <p className="text-gold-400/80 text-xs tracking-[0.25em] uppercase">Jewellers</p>
             </div>
           </div>
-          <h2 className="font-serif text-white text-6xl font-medium leading-[1.05] mb-4">
+          <h2 className="text-white text-5xl font-semibold tracking-tight leading-[1.08] mb-4">
             Command<br />Centre
           </h2>
           <div className="h-px w-14 bg-gold-400/80 mb-6" />
@@ -68,17 +68,17 @@ export default function LoginPage() {
           </p>
           <div className="mt-16 flex gap-8">
             <div>
-              <p className="font-serif text-gold-200 text-3xl">18</p>
+              <p className="text-gold-200 text-2xl font-semibold tracking-tight">18</p>
               <p className="text-white/40 text-xs uppercase tracking-wider mt-1">Departments</p>
             </div>
             <div className="w-px bg-white/10" />
             <div>
-              <p className="font-serif text-gold-200 text-3xl">5</p>
+              <p className="text-gold-200 text-2xl font-semibold tracking-tight">5</p>
               <p className="text-white/40 text-xs uppercase tracking-wider mt-1">Role levels</p>
             </div>
             <div className="w-px bg-white/10" />
             <div>
-              <p className="font-serif text-gold-200 text-3xl">24/7</p>
+              <p className="text-gold-200 text-2xl font-semibold tracking-tight">24/7</p>
               <p className="text-white/40 text-xs uppercase tracking-wider mt-1">Automation</p>
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-10">
-            <h2 className="font-serif text-[#09203F] text-4xl font-semibold">Welcome back</h2>
+            <h2 className="text-[#09203F] text-3xl font-semibold tracking-tight">Welcome back</h2>
             <p className="text-stone-400 text-sm mt-3">Sign in to your account to continue</p>
           </div>
 

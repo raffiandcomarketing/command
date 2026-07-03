@@ -19,7 +19,6 @@
     "start:prod": "node scripts/start.js"
   },
   "dependencies": {
-    "@fontsource/cormorant-garamond": "^5.2.11",
     "@fontsource/inter": "^5.2.8",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@prisma/adapter-pg": "^5.22.0",

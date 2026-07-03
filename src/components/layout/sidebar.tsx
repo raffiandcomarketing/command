@@ -182,7 +182,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
               <img src="https://www.raffi-jewellers.ca/assets/img/footer/Raffi_Logo_Footer.b617a5c0.svg" alt="Raffi Jewellers" className="w-full h-full object-contain brightness-0 invert opacity-95" />
             </div>
             <div className="min-w-0">
-              <p className="font-serif text-lg font-semibold text-white leading-none tracking-[0.14em]">RAFFI</p>
+              <p className="text-sm font-bold text-white leading-none tracking-[0.28em]">RAFFI</p>
               <p className="text-[10px] font-semibold text-gold-400/90 uppercase tracking-luxe whitespace-nowrap mt-1">
                 Command Centre
               </p>
